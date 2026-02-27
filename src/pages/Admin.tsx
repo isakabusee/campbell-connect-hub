@@ -157,6 +157,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const { data: items } = useQuery({
     queryKey: ["admin-bulletins"],
@@ -180,12 +181,17 @@ function BulletinsAdmin({ userId }: { userId: string }) {
   const create = useMutation({
     mutationFn: async () => {
       setUploading(true);
+      setUploadProgress(0);
+      let completed = 0;
+      const total = files.length || 1;
       const file_urls = await Promise.all(
         files.map(async (file) => {
           const ext = file.name.split(".").pop();
           const path = `${crypto.randomUUID()}.${ext}`;
           const { error: uploadError } = await supabase.storage.from("bulletins").upload(path, file);
           if (uploadError) throw uploadError;
+          completed++;
+          setUploadProgress(Math.round((completed / total) * 100));
           const { data: urlData } = supabase.storage.from("bulletins").getPublicUrl(path);
           return urlData.publicUrl;
         })
@@ -197,7 +203,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
     onSuccess: () => {
       toast.success("Bulletin created!");
       setTitle(""); setContent(""); setFiles([]);
-      setUploading(false);
+      setUploading(false); setUploadProgress(0);
       qc.invalidateQueries({ queryKey: ["admin-bulletins"] });
       qc.invalidateQueries({ queryKey: ["bulletins"] });
     },
@@ -238,6 +244,20 @@ function BulletinsAdmin({ userId }: { userId: string }) {
               </ul>
             )}
           </div>
+          {uploading && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs font-body text-muted-foreground">
+                <span>Uploading files…</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-accent transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
           <Button onClick={() => create.mutate()} disabled={!title || !content || uploading || create.isPending} className="font-body">
             <Upload size={16} className="mr-2" />
             {uploading ? "Uploading…" : "Create Bulletin"}
