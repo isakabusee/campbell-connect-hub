@@ -1,12 +1,69 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import HeroSection from "@/components/HeroSection";
+import AnnouncementsList from "@/components/AnnouncementsList";
+import BulletinsList from "@/components/BulletinsList";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Church, BookOpen, Heart, ArrowRight } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <HeroSection />
+
+        {/* Service info cards */}
+        <section className="bg-secondary py-16">
+          <div className="container">
+            <div className="grid gap-6 md:grid-cols-3">
+              {[
+                { icon: Church, title: "Worship", desc: "Join us every Sabbath for uplifting worship and fellowship." },
+                { icon: BookOpen, title: "Bible Study", desc: "Deepen your faith through our Sabbath School classes." },
+                { icon: Heart, title: "Community", desc: "Connect with others through service and outreach." },
+              ].map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="flex flex-col items-center rounded-lg bg-card p-6 text-center shadow-sm">
+                  <Icon size={32} className="mb-3 text-accent" />
+                  <h3 className="mb-2 font-display text-lg font-semibold">{title}</h3>
+                  <p className="font-body text-sm text-muted-foreground">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Announcements preview */}
+        <section className="py-16">
+          <div className="container">
+            <div className="mb-8 flex items-end justify-between">
+              <h2 className="font-display text-3xl font-bold">Announcements</h2>
+              <Button asChild variant="ghost" className="font-body text-accent">
+                <Link to="/announcements">
+                  View All <ArrowRight size={16} className="ml-1" />
+                </Link>
+              </Button>
+            </div>
+            <AnnouncementsList limit={3} />
+          </div>
+        </section>
+
+        {/* Bulletins preview */}
+        <section className="bg-secondary py-16">
+          <div className="container">
+            <div className="mb-8 flex items-end justify-between">
+              <h2 className="font-display text-3xl font-bold">Church Bulletins</h2>
+              <Button asChild variant="ghost" className="font-body text-accent">
+                <Link to="/bulletins">
+                  View All <ArrowRight size={16} className="ml-1" />
+                </Link>
+              </Button>
+            </div>
+            <BulletinsList limit={2} />
+          </div>
+        </section>
+      </main>
+      <Footer />
     </div>
   );
 };
