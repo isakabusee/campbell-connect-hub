@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { compressIfImage } from "@/lib/compressImage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -75,9 +76,10 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
       let file_url: string | null = null;
 
       if (file) {
+        const compressed = await compressIfImage(file);
         const ext = file.name.split(".").pop();
         const path = `${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from("bulletins").upload(path, file);
+        const { error: uploadError } = await supabase.storage.from("bulletins").upload(path, compressed);
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("bulletins").getPublicUrl(path);
         file_url = urlData.publicUrl;
@@ -176,17 +178,6 @@ function BulletinsAdmin({ userId }: { userId: string }) {
 
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const compressIfImage = async (file: File): Promise<File> => {
-    const imageTypes = ["image/jpeg", "image/png", "image/webp", "image/bmp"];
-    if (!imageTypes.includes(file.type)) return file;
-    const imageCompression = (await import("browser-image-compression")).default;
-    return imageCompression(file, {
-      maxSizeMB: 1,
-      maxWidthOrHeight: 1920,
-      useWebWorker: true,
-    });
   };
 
   const create = useMutation({
