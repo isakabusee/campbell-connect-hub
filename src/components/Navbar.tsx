@@ -25,14 +25,11 @@ const Navbar = () => {
     links.push({ to: "/admin", label: "Admin" });
   }
 
-
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <span className="font-display text-xl font-bold text-primary">
-            Campbell SDA
-          </span>
+          <span className="font-display text-xl font-bold text-primary">Campbell SDA Church</span>
         </Link>
 
         {/* Desktop nav */}
@@ -42,9 +39,7 @@ const Navbar = () => {
               key={link.to}
               to={link.to}
               className={`font-body text-sm font-medium transition-colors hover:text-accent ${
-                location.pathname === link.to
-                  ? "text-accent"
-                  : "text-muted-foreground"
+                location.pathname === link.to ? "text-accent" : "text-muted-foreground"
               }`}
             >
               {link.label}
@@ -62,10 +57,7 @@ const Navbar = () => {
         </div>
 
         {/* Mobile toggle */}
-        <button
-          className="md:hidden text-foreground"
-          onClick={() => setMobileOpen(!mobileOpen)}
-        >
+        <button className="md:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
@@ -80,9 +72,7 @@ const Navbar = () => {
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
                 className={`font-body text-sm font-medium transition-colors hover:text-accent ${
-                  location.pathname === link.to
-                    ? "text-accent"
-                    : "text-muted-foreground"
+                  location.pathname === link.to ? "text-accent" : "text-muted-foreground"
                 }`}
               >
                 {link.label}
