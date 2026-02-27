@@ -14,6 +14,7 @@ const Navbar = () => {
     { to: "/", label: "Home" },
     { to: "/announcements", label: "Announcements" },
     { to: "/bulletins", label: "Bulletins" },
+    { to: "/sermons", label: "Sermons" },
     { to: "/contact", label: "Contact" },
   ];
 

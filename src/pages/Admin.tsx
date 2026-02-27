@@ -12,8 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, Upload } from "lucide-react";
 import { format } from "date-fns";
+import { supabase as sb } from "@/integrations/supabase/client";
 
 const AdminPage = () => {
   const { user, isAdmin, loading } = useAuth();
@@ -31,10 +32,12 @@ const AdminPage = () => {
             <TabsList className="mb-6">
               <TabsTrigger value="announcements" className="font-body">Announcements</TabsTrigger>
               <TabsTrigger value="bulletins" className="font-body">Bulletins</TabsTrigger>
+              <TabsTrigger value="sermons" className="font-body">Sermons</TabsTrigger>
               <TabsTrigger value="messages" className="font-body">Messages</TabsTrigger>
             </TabsList>
             <TabsContent value="announcements"><AnnouncementsAdmin userId={user.id} /></TabsContent>
             <TabsContent value="bulletins"><BulletinsAdmin userId={user.id} /></TabsContent>
+            <TabsContent value="sermons"><SermonsAdmin userId={user.id} /></TabsContent>
             <TabsContent value="messages"><MessagesAdmin /></TabsContent>
           </Tabs>
         </div>
@@ -210,6 +213,102 @@ function MessagesAdmin() {
           </CardContent>
         </Card>
       ))}
+    </div>
+  );
+}
+
+function SermonsAdmin({ userId }: { userId: string }) {
+  const qc = useQueryClient();
+  const [title, setTitle] = useState("");
+  const [speaker, setSpeaker] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [description, setDescription] = useState("");
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const { data: items } = useQuery({
+    queryKey: ["admin-sermons"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("sermons").select("*").order("date", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const create = useMutation({
+    mutationFn: async () => {
+      setUploading(true);
+      let audio_url: string | null = null;
+
+      if (audioFile) {
+        const ext = audioFile.name.split(".").pop();
+        const path = `${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("sermons").upload(path, audioFile);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("sermons").getPublicUrl(path);
+        audio_url = urlData.publicUrl;
+      }
+
+      const { error } = await supabase.from("sermons").insert({
+        title, speaker, date, description: description || null, audio_url, author_id: userId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Sermon added!");
+      setTitle(""); setSpeaker(""); setDescription(""); setAudioFile(null);
+      setUploading(false);
+      qc.invalidateQueries({ queryKey: ["admin-sermons"] });
+      qc.invalidateQueries({ queryKey: ["sermons"] });
+    },
+    onError: () => { toast.error("Failed to add sermon."); setUploading(false); },
+  });
+
+  const del = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("sermons").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-sermons"] });
+      qc.invalidateQueries({ queryKey: ["sermons"] });
+    },
+  });
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader><CardTitle className="font-display">New Sermon</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div><Label className="font-body">Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+          <div><Label className="font-body">Speaker</Label><Input value={speaker} onChange={(e) => setSpeaker(e.target.value)} /></div>
+          <div><Label className="font-body">Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+          <div><Label className="font-body">Description (optional)</Label><Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} /></div>
+          <div>
+            <Label className="font-body">Audio File (MP3)</Label>
+            <Input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files?.[0] ?? null)} />
+          </div>
+          <Button onClick={() => create.mutate()} disabled={!title || !speaker || uploading || create.isPending} className="font-body">
+            <Upload size={16} className="mr-2" />
+            {uploading ? "Uploading…" : "Add Sermon"}
+          </Button>
+        </CardContent>
+      </Card>
+      <div className="space-y-3">
+        {items?.map((s) => (
+          <Card key={s.id}>
+            <CardContent className="flex items-start justify-between pt-4">
+              <div>
+                <p className="font-display font-semibold">{s.title}</p>
+                <p className="text-xs text-muted-foreground font-body">{s.speaker} — {format(new Date(s.date), "MMMM d, yyyy")}</p>
+                {s.description && <p className="mt-1 text-sm text-muted-foreground font-body">{s.description}</p>}
+                {s.audio_url && <p className="text-xs text-accent font-body mt-1">🎵 Audio attached</p>}
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => del.mutate(s.id)}><Trash2 size={16} className="text-destructive" /></Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

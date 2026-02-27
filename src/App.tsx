@@ -9,6 +9,7 @@ import Announcements from "./pages/Announcements";
 import Bulletins from "./pages/Bulletins";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
+import Sermons from "./pages/Sermons";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/announcements" element={<Announcements />} />
             <Route path="/bulletins" element={<Bulletins />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/sermons" element={<Sermons />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
