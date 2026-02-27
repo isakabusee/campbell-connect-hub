@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Trash2, Upload, CalendarDays, ImagePlus, Plus } from "lucide-react";
+import { Trash2, Upload, CalendarDays, ImagePlus, Plus, Users } from "lucide-react";
 import { format } from "date-fns";
 import { supabase as sb } from "@/integrations/supabase/client";
 
@@ -35,6 +35,7 @@ const AdminPage = () => {
               <TabsTrigger value="sermons" className="font-body">Sermons</TabsTrigger>
               <TabsTrigger value="events" className="font-body">Events</TabsTrigger>
               <TabsTrigger value="gallery" className="font-body">Gallery</TabsTrigger>
+              <TabsTrigger value="groups" className="font-body">Groups</TabsTrigger>
               <TabsTrigger value="messages" className="font-body">Messages</TabsTrigger>
             </TabsList>
             <TabsContent value="announcements"><AnnouncementsAdmin userId={user.id} /></TabsContent>
@@ -42,6 +43,7 @@ const AdminPage = () => {
             <TabsContent value="sermons"><SermonsAdmin userId={user.id} /></TabsContent>
             <TabsContent value="events"><EventsAdmin userId={user.id} /></TabsContent>
             <TabsContent value="gallery"><GalleryAdmin userId={user.id} /></TabsContent>
+            <TabsContent value="groups"><SmallGroupsAdmin /></TabsContent>
             <TabsContent value="messages"><MessagesAdmin /></TabsContent>
           </Tabs>
         </div>
@@ -608,6 +610,100 @@ function GalleryAdmin({ userId }: { userId: string }) {
                 )}
               </CardContent>
             )}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SmallGroupsAdmin() {
+  const qc = useQueryClient();
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [meetingDay, setMeetingDay] = useState("");
+  const [meetingTime, setMeetingTime] = useState("");
+  const [location, setLocation] = useState("");
+  const [leaderName, setLeaderName] = useState("");
+  const [maxMembers, setMaxMembers] = useState("");
+
+  const { data: groups } = useQuery({
+    queryKey: ["admin-small-groups"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("small_groups").select("*").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const create = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("small_groups").insert({
+        name,
+        description: description || null,
+        meeting_day: meetingDay || null,
+        meeting_time: meetingTime || null,
+        location: location || null,
+        leader_name: leaderName || null,
+        max_members: maxMembers ? parseInt(maxMembers) : null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Small group created!");
+      setName(""); setDescription(""); setMeetingDay(""); setMeetingTime(""); setLocation(""); setLeaderName(""); setMaxMembers("");
+      qc.invalidateQueries({ queryKey: ["admin-small-groups"] });
+      qc.invalidateQueries({ queryKey: ["small-groups"] });
+    },
+    onError: () => toast.error("Failed to create group."),
+  });
+
+  const del = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("small_groups").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-small-groups"] });
+      qc.invalidateQueries({ queryKey: ["small-groups"] });
+    },
+  });
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader><CardTitle className="font-display">New Small Group</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label className="font-body">Group Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
+            <div><Label className="font-body">Leader Name</Label><Input value={leaderName} onChange={(e) => setLeaderName(e.target.value)} placeholder="e.g. Pastor John" /></div>
+          </div>
+          <div><Label className="font-body">Description</Label><Textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} /></div>
+          <div className="grid grid-cols-3 gap-3">
+            <div><Label className="font-body">Meeting Day</Label><Input value={meetingDay} onChange={(e) => setMeetingDay(e.target.value)} placeholder="e.g. Wednesday" /></div>
+            <div><Label className="font-body">Meeting Time</Label><Input value={meetingTime} onChange={(e) => setMeetingTime(e.target.value)} placeholder="e.g. 7:00 PM" /></div>
+            <div><Label className="font-body">Max Members</Label><Input type="number" value={maxMembers} onChange={(e) => setMaxMembers(e.target.value)} placeholder="Optional" /></div>
+          </div>
+          <div><Label className="font-body">Location</Label><Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Room 204" /></div>
+          <Button onClick={() => create.mutate()} disabled={!name || create.isPending} className="font-body">
+            <Users size={16} className="mr-2" />
+            {create.isPending ? "Creating…" : "Create Group"}
+          </Button>
+        </CardContent>
+      </Card>
+      <div className="space-y-3">
+        {groups?.map((g) => (
+          <Card key={g.id}>
+            <CardContent className="flex items-start justify-between pt-4">
+              <div>
+                <p className="font-display font-semibold">{g.name}</p>
+                <p className="text-xs text-muted-foreground font-body">
+                  {[g.leader_name && `Led by ${g.leader_name}`, g.meeting_day, g.meeting_time, g.location].filter(Boolean).join(" · ")}
+                </p>
+                {g.description && <p className="mt-1 text-sm text-muted-foreground font-body">{g.description}</p>}
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => del.mutate(g.id)}><Trash2 size={16} className="text-destructive" /></Button>
+            </CardContent>
           </Card>
         ))}
       </div>
