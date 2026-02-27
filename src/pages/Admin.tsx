@@ -155,7 +155,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const { data: items } = useQuery({
@@ -167,26 +167,36 @@ function BulletinsAdmin({ userId }: { userId: string }) {
     },
   });
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const create = useMutation({
     mutationFn: async () => {
       setUploading(true);
-      let file_url: string | null = null;
+      const file_urls: string[] = [];
 
-      if (file) {
+      for (const file of files) {
         const ext = file.name.split(".").pop();
         const path = `${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabase.storage.from("bulletins").upload(path, file);
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("bulletins").getPublicUrl(path);
-        file_url = urlData.publicUrl;
+        file_urls.push(urlData.publicUrl);
       }
 
-      const { error } = await supabase.from("bulletins").insert({ title, content, date, author_id: userId, file_url });
+      const { error } = await supabase.from("bulletins").insert({ title, content, date, author_id: userId, file_urls });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Bulletin created!");
-      setTitle(""); setContent(""); setFile(null);
+      setTitle(""); setContent(""); setFiles([]);
       setUploading(false);
       qc.invalidateQueries({ queryKey: ["admin-bulletins"] });
       qc.invalidateQueries({ queryKey: ["bulletins"] });
@@ -214,10 +224,19 @@ function BulletinsAdmin({ userId }: { userId: string }) {
           <div><Label className="font-body">Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
           <div><Label className="font-body">Content</Label><Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} /></div>
           <div className="rounded-lg border border-border p-4 space-y-2">
-            <p className="font-body text-sm font-semibold text-foreground">Attachment (optional)</p>
-            <Label className="font-body text-sm text-muted-foreground">Upload a PDF, image, or document</Label>
-            <Input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-            {file && <p className="text-xs text-muted-foreground font-body">Selected: {file.name}</p>}
+            <p className="font-body text-sm font-semibold text-foreground">Attachments (optional)</p>
+            <Label className="font-body text-sm text-muted-foreground">Upload PDFs, images, or documents</Label>
+            <Input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" multiple onChange={handleFileChange} />
+            {files.length > 0 && (
+              <ul className="space-y-1">
+                {files.map((f, i) => (
+                  <li key={i} className="flex items-center justify-between rounded bg-muted px-2 py-1 text-xs font-body">
+                    <span className="truncate">{f.name}</span>
+                    <button type="button" onClick={() => removeFile(i)} className="ml-2 text-destructive hover:underline">Remove</button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <Button onClick={() => create.mutate()} disabled={!title || !content || uploading || create.isPending} className="font-body">
             <Upload size={16} className="mr-2" />
@@ -233,10 +252,14 @@ function BulletinsAdmin({ userId }: { userId: string }) {
                 <p className="font-display font-semibold">{b.title}</p>
                 <p className="text-xs text-muted-foreground font-body">{format(new Date(b.date), "MMMM d, yyyy")}</p>
                 <p className="mt-1 text-sm text-muted-foreground font-body whitespace-pre-line">{b.content}</p>
-                {b.file_url && (
-                  <a href={b.file_url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-accent font-body">
-                    📎 Attachment
-                  </a>
+                {b.file_urls && b.file_urls.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {b.file_urls.map((url: string, i: number) => (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent font-body">
+                        📎 Attachment {b.file_urls!.length > 1 ? i + 1 : ""}
+                      </a>
+                    ))}
+                  </div>
                 )}
               </div>
               <Button variant="ghost" size="icon" onClick={() => del.mutate(b.id)}><Trash2 size={16} className="text-destructive" /></Button>

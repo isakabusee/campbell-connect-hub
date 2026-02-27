@@ -89,7 +89,7 @@ export type Database = {
           content: string
           created_at: string
           date: string
-          file_url: string | null
+          file_urls: string[] | null
           id: string
           published: boolean
           title: string
@@ -100,7 +100,7 @@ export type Database = {
           content: string
           created_at?: string
           date?: string
-          file_url?: string | null
+          file_urls?: string[] | null
           id?: string
           published?: boolean
           title: string
@@ -111,7 +111,7 @@ export type Database = {
           content?: string
           created_at?: string
           date?: string
-          file_url?: string | null
+          file_urls?: string[] | null
           id?: string
           published?: boolean
           title?: string
