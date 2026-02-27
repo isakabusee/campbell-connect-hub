@@ -104,6 +104,45 @@ export type Database = {
         }
         Relationships: []
       }
+      sermons: {
+        Row: {
+          audio_url: string | null
+          author_id: string | null
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          published: boolean
+          speaker: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audio_url?: string | null
+          author_id?: string | null
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          published?: boolean
+          speaker: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audio_url?: string | null
+          author_id?: string | null
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          published?: boolean
+          speaker?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
