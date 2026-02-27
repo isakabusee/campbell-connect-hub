@@ -17,6 +17,8 @@ const Navbar = () => {
     { to: "/sermons", label: "Sermons" },
     { to: "/events", label: "Events" },
     { to: "/gallery", label: "Gallery" },
+    { to: "/directory", label: "Directory" },
+    { to: "/small-groups", label: "Groups" },
     { to: "/contact", label: "Contact" },
   ];
 

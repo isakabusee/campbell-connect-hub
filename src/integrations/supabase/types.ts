@@ -214,6 +214,42 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+          visible_in_directory: boolean
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+          visible_in_directory?: boolean
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+          visible_in_directory?: boolean
+        }
+        Relationships: []
+      }
       sermons: {
         Row: {
           audio_url: string | null
@@ -256,6 +292,77 @@ export type Database = {
           updated_at?: string
           video_link?: string | null
           video_url?: string | null
+        }
+        Relationships: []
+      }
+      small_group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "small_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "small_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      small_groups: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          leader_name: string | null
+          location: string | null
+          max_members: number | null
+          meeting_day: string | null
+          meeting_time: string | null
+          name: string
+          published: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          leader_name?: string | null
+          location?: string | null
+          max_members?: number | null
+          meeting_day?: string | null
+          meeting_time?: string | null
+          name: string
+          published?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          leader_name?: string | null
+          location?: string | null
+          max_members?: number | null
+          meeting_day?: string | null
+          meeting_time?: string | null
+          name?: string
+          published?: boolean
+          updated_at?: string
         }
         Relationships: []
       }

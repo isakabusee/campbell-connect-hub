@@ -12,6 +12,8 @@ import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Sermons from "./pages/Sermons";
 import Gallery from "./pages/Gallery";
+import Directory from "./pages/Directory";
+import SmallGroups from "./pages/SmallGroups";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +34,8 @@ const App = () => (
             <Route path="/sermons" element={<Sermons />} />
             <Route path="/events" element={<Events />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/directory" element={<Directory />} />
+            <Route path="/small-groups" element={<SmallGroups />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
