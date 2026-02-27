@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText } from "lucide-react";
+import { FileText, Paperclip } from "lucide-react";
 
 const BulletinsList = ({ limit }: { limit?: number }) => {
   const { data: bulletins, isLoading } = useQuery({
@@ -52,6 +52,12 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
           </CardHeader>
           <CardContent>
             <p className="font-body text-sm text-muted-foreground whitespace-pre-line">{b.content}</p>
+            {b.file_url && (
+              <a href={b.file_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent/10 px-3 py-1.5 text-xs font-body text-accent hover:bg-accent/20 transition-colors">
+                <Paperclip size={14} />
+                View Attachment
+              </a>
+            )}
           </CardContent>
         </Card>
       ))}
