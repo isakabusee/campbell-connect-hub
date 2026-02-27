@@ -57,6 +57,8 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const { data: items } = useQuery({
     queryKey: ["admin-announcements"],
@@ -69,16 +71,29 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
 
   const create = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("announcements").insert({ title, content, author_id: userId });
+      setUploading(true);
+      let file_url: string | null = null;
+
+      if (file) {
+        const ext = file.name.split(".").pop();
+        const path = `${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("bulletins").upload(path, file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("bulletins").getPublicUrl(path);
+        file_url = urlData.publicUrl;
+      }
+
+      const { error } = await supabase.from("announcements").insert({ title, content, author_id: userId, file_url });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Announcement created!");
-      setTitle(""); setContent("");
+      setTitle(""); setContent(""); setFile(null);
+      setUploading(false);
       qc.invalidateQueries({ queryKey: ["admin-announcements"] });
       qc.invalidateQueries({ queryKey: ["announcements"] });
     },
-    onError: () => toast.error("Failed to create announcement."),
+    onError: (err: any) => { toast.error(err?.message || "Failed to create announcement."); setUploading(false); },
   });
 
   const del = useMutation({
@@ -100,8 +115,15 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
         <CardContent className="space-y-3">
           <div><Label className="font-body">Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
           <div><Label className="font-body">Content</Label><Textarea rows={4} value={content} onChange={(e) => setContent(e.target.value)} /></div>
-          <Button onClick={() => create.mutate()} disabled={!title || !content || create.isPending} className="font-body">
-            {create.isPending ? "Creating..." : "Create Announcement"}
+          <div className="rounded-lg border border-border p-4 space-y-2">
+            <p className="font-body text-sm font-semibold text-foreground">Attachment (optional)</p>
+            <Label className="font-body text-sm text-muted-foreground">Upload a PDF, image, or document</Label>
+            <Input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            {file && <p className="text-xs text-muted-foreground font-body">Selected: {file.name}</p>}
+          </div>
+          <Button onClick={() => create.mutate()} disabled={!title || !content || uploading || create.isPending} className="font-body">
+            <Upload size={16} className="mr-2" />
+            {uploading ? "Uploading…" : "Create Announcement"}
           </Button>
         </CardContent>
       </Card>
@@ -113,6 +135,11 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
                 <p className="font-display font-semibold">{a.title}</p>
                 <p className="text-xs text-muted-foreground font-body">{format(new Date(a.created_at), "MMM d, yyyy")}</p>
                 <p className="mt-1 text-sm text-muted-foreground font-body">{a.content}</p>
+                {a.file_url && (
+                  <a href={a.file_url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-accent font-body">
+                    📎 Attachment
+                  </a>
+                )}
               </div>
               <Button variant="ghost" size="icon" onClick={() => del.mutate(a.id)}><Trash2 size={16} className="text-destructive" /></Button>
             </CardContent>
