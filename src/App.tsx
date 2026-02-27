@@ -14,6 +14,7 @@ import Sermons from "./pages/Sermons";
 import Gallery from "./pages/Gallery";
 import Directory from "./pages/Directory";
 import SmallGroups from "./pages/SmallGroups";
+import Logout from "./pages/Logout";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/small-groups" element={<SmallGroups />} />
+            <Route path="/logout" element={<Logout />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />

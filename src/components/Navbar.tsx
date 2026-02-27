@@ -1,14 +1,12 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
 
   const links = [
@@ -27,18 +25,6 @@ const Navbar = () => {
     links.push({ to: "/admin", label: "Admin" });
   }
 
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Sign out error:", error);
-      }
-      navigate("/");
-    } catch (err) {
-      console.error("Sign out exception:", err);
-      navigate("/");
-    }
-  };
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
@@ -65,8 +51,8 @@ const Navbar = () => {
             </Link>
           ))}
           {user ? (
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              Sign Out
+            <Button asChild variant="outline" size="sm">
+              <Link to="/logout">Sign Out</Link>
             </Button>
           ) : (
             <Button asChild size="sm">
@@ -103,8 +89,8 @@ const Navbar = () => {
               </Link>
             ))}
             {user ? (
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                Sign Out
+              <Button asChild variant="outline" size="sm" onClick={() => setMobileOpen(false)}>
+                <Link to="/logout">Sign Out</Link>
               </Button>
             ) : (
               <Button asChild size="sm">
