@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Trash2, Upload } from "lucide-react";
+import { Trash2, Upload, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { supabase as sb } from "@/integrations/supabase/client";
 
@@ -33,11 +33,13 @@ const AdminPage = () => {
               <TabsTrigger value="announcements" className="font-body">Announcements</TabsTrigger>
               <TabsTrigger value="bulletins" className="font-body">Bulletins</TabsTrigger>
               <TabsTrigger value="sermons" className="font-body">Sermons</TabsTrigger>
+              <TabsTrigger value="events" className="font-body">Events</TabsTrigger>
               <TabsTrigger value="messages" className="font-body">Messages</TabsTrigger>
             </TabsList>
             <TabsContent value="announcements"><AnnouncementsAdmin userId={user.id} /></TabsContent>
             <TabsContent value="bulletins"><BulletinsAdmin userId={user.id} /></TabsContent>
             <TabsContent value="sermons"><SermonsAdmin userId={user.id} /></TabsContent>
+            <TabsContent value="events"><EventsAdmin userId={user.id} /></TabsContent>
             <TabsContent value="messages"><MessagesAdmin /></TabsContent>
           </Tabs>
         </div>
@@ -321,6 +323,95 @@ function SermonsAdmin({ userId }: { userId: string }) {
                 {s.video_url && <p className="text-xs text-accent font-body mt-1">🎬 Video attached</p>}
               </div>
               <Button variant="ghost" size="icon" onClick={() => del.mutate(s.id)}><Trash2 size={16} className="text-destructive" /></Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EventsAdmin({ userId }: { userId: string }) {
+  const qc = useQueryClient();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+
+  const { data: items } = useQuery({
+    queryKey: ["admin-events"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("events").select("*").order("start_time", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const create = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("events").insert({
+        title,
+        description: description || null,
+        location: location || null,
+        start_time: new Date(startTime).toISOString(),
+        end_time: endTime ? new Date(endTime).toISOString() : null,
+        author_id: userId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Event created!");
+      setTitle(""); setDescription(""); setLocation(""); setStartTime(""); setEndTime("");
+      qc.invalidateQueries({ queryKey: ["admin-events"] });
+      qc.invalidateQueries({ queryKey: ["events"] });
+    },
+    onError: () => toast.error("Failed to create event."),
+  });
+
+  const del = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("events").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-events"] });
+      qc.invalidateQueries({ queryKey: ["events"] });
+    },
+  });
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader><CardTitle className="font-display">New Event</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div><Label className="font-body">Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+          <div><Label className="font-body">Location (optional)</Label><Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Main Sanctuary" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label className="font-body">Start</Label><Input type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} /></div>
+            <div><Label className="font-body">End (optional)</Label><Input type="datetime-local" value={endTime} onChange={(e) => setEndTime(e.target.value)} /></div>
+          </div>
+          <div><Label className="font-body">Description (optional)</Label><Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} /></div>
+          <Button onClick={() => create.mutate()} disabled={!title || !startTime || create.isPending} className="font-body">
+            <CalendarDays size={16} className="mr-2" />
+            {create.isPending ? "Creating…" : "Add Event"}
+          </Button>
+        </CardContent>
+      </Card>
+      <div className="space-y-3">
+        {items?.map((ev) => (
+          <Card key={ev.id}>
+            <CardContent className="flex items-start justify-between pt-4">
+              <div>
+                <p className="font-display font-semibold">{ev.title}</p>
+                <p className="text-xs text-muted-foreground font-body">
+                  {format(new Date(ev.start_time), "MMM d, yyyy h:mm a")}
+                  {ev.end_time && ` – ${format(new Date(ev.end_time), "h:mm a")}`}
+                </p>
+                {ev.location && <p className="text-xs text-muted-foreground font-body">📍 {ev.location}</p>}
+                {ev.description && <p className="mt-1 text-sm text-muted-foreground font-body">{ev.description}</p>}
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => del.mutate(ev.id)}><Trash2 size={16} className="text-destructive" /></Button>
             </CardContent>
           </Card>
         ))}
