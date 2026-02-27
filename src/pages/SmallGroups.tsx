@@ -42,17 +42,14 @@ const SmallGroups = () => {
   const { data: memberCounts } = useQuery({
     queryKey: ["group-member-counts"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("small_group_members")
-        .select("group_id");
+      const { data, error } = await supabase.rpc("get_group_member_counts");
       if (error) throw error;
       const counts: Record<string, number> = {};
-      data.forEach((m) => {
-        counts[m.group_id] = (counts[m.group_id] || 0) + 1;
+      (data as { group_id: string; member_count: number }[])?.forEach((row) => {
+        counts[row.group_id] = row.member_count;
       });
       return counts;
     },
-    enabled: !!user,
   });
 
   const join = useMutation({
