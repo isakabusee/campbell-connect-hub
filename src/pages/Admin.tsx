@@ -224,6 +224,7 @@ function SermonsAdmin({ userId }: { userId: string }) {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [description, setDescription] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const { data: items } = useQuery({
@@ -239,24 +240,34 @@ function SermonsAdmin({ userId }: { userId: string }) {
     mutationFn: async () => {
       setUploading(true);
       let audio_url: string | null = null;
+      let video_url: string | null = null;
 
       if (audioFile) {
         const ext = audioFile.name.split(".").pop();
-        const path = `${crypto.randomUUID()}.${ext}`;
+        const path = `audio/${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabase.storage.from("sermons").upload(path, audioFile);
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("sermons").getPublicUrl(path);
         audio_url = urlData.publicUrl;
       }
 
+      if (videoFile) {
+        const ext = videoFile.name.split(".").pop();
+        const path = `video/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("sermons").upload(path, videoFile);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("sermons").getPublicUrl(path);
+        video_url = urlData.publicUrl;
+      }
+
       const { error } = await supabase.from("sermons").insert({
-        title, speaker, date, description: description || null, audio_url, author_id: userId,
+        title, speaker, date, description: description || null, audio_url, video_url, author_id: userId,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Sermon added!");
-      setTitle(""); setSpeaker(""); setDescription(""); setAudioFile(null);
+      setTitle(""); setSpeaker(""); setDescription(""); setAudioFile(null); setVideoFile(null);
       setUploading(false);
       qc.invalidateQueries({ queryKey: ["admin-sermons"] });
       qc.invalidateQueries({ queryKey: ["sermons"] });
@@ -288,6 +299,10 @@ function SermonsAdmin({ userId }: { userId: string }) {
             <Label className="font-body">Audio File (MP3)</Label>
             <Input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files?.[0] ?? null)} />
           </div>
+          <div>
+            <Label className="font-body">Video File (MP4)</Label>
+            <Input type="file" accept="video/*" onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)} />
+          </div>
           <Button onClick={() => create.mutate()} disabled={!title || !speaker || uploading || create.isPending} className="font-body">
             <Upload size={16} className="mr-2" />
             {uploading ? "Uploading…" : "Add Sermon"}
@@ -303,6 +318,7 @@ function SermonsAdmin({ userId }: { userId: string }) {
                 <p className="text-xs text-muted-foreground font-body">{s.speaker} — {format(new Date(s.date), "MMMM d, yyyy")}</p>
                 {s.description && <p className="mt-1 text-sm text-muted-foreground font-body">{s.description}</p>}
                 {s.audio_url && <p className="text-xs text-accent font-body mt-1">🎵 Audio attached</p>}
+                {s.video_url && <p className="text-xs text-accent font-body mt-1">🎬 Video attached</p>}
               </div>
               <Button variant="ghost" size="icon" onClick={() => del.mutate(s.id)}><Trash2 size={16} className="text-destructive" /></Button>
             </CardContent>
