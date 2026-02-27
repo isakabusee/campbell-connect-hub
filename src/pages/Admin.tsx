@@ -180,16 +180,16 @@ function BulletinsAdmin({ userId }: { userId: string }) {
   const create = useMutation({
     mutationFn: async () => {
       setUploading(true);
-      const file_urls: string[] = [];
-
-      for (const file of files) {
-        const ext = file.name.split(".").pop();
-        const path = `${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from("bulletins").upload(path, file);
-        if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("bulletins").getPublicUrl(path);
-        file_urls.push(urlData.publicUrl);
-      }
+      const file_urls = await Promise.all(
+        files.map(async (file) => {
+          const ext = file.name.split(".").pop();
+          const path = `${crypto.randomUUID()}.${ext}`;
+          const { error: uploadError } = await supabase.storage.from("bulletins").upload(path, file);
+          if (uploadError) throw uploadError;
+          const { data: urlData } = supabase.storage.from("bulletins").getPublicUrl(path);
+          return urlData.publicUrl;
+        })
+      );
 
       const { error } = await supabase.from("bulletins").insert({ title, content, date, author_id: userId, file_urls });
       if (error) throw error;
