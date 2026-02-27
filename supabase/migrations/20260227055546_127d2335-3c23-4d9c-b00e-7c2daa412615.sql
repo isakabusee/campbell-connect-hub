@@ -1,0 +1,1 @@
+ALTER TABLE public.sermons ADD COLUMN video_link TEXT;
