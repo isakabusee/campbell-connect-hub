@@ -52,11 +52,15 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
           </CardHeader>
           <CardContent>
             <p className="font-body text-sm text-muted-foreground whitespace-pre-line">{b.content}</p>
-            {b.file_url && (
-              <a href={b.file_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent/10 px-3 py-1.5 text-xs font-body text-accent hover:bg-accent/20 transition-colors">
-                <Paperclip size={14} />
-                View Attachment
-              </a>
+            {b.file_urls && b.file_urls.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {b.file_urls.map((url: string, i: number) => (
+                  <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-md bg-accent/10 px-3 py-1.5 text-xs font-body text-accent hover:bg-accent/20 transition-colors">
+                    <Paperclip size={14} />
+                    {b.file_urls!.length > 1 ? `Attachment ${i + 1}` : "View Attachment"}
+                  </a>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
