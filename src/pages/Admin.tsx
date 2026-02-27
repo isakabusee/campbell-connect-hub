@@ -128,6 +128,8 @@ function BulletinsAdmin({ userId }: { userId: string }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const { data: items } = useQuery({
     queryKey: ["admin-bulletins"],
@@ -140,16 +142,29 @@ function BulletinsAdmin({ userId }: { userId: string }) {
 
   const create = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("bulletins").insert({ title, content, date, author_id: userId });
+      setUploading(true);
+      let file_url: string | null = null;
+
+      if (file) {
+        const ext = file.name.split(".").pop();
+        const path = `${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("bulletins").upload(path, file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("bulletins").getPublicUrl(path);
+        file_url = urlData.publicUrl;
+      }
+
+      const { error } = await supabase.from("bulletins").insert({ title, content, date, author_id: userId, file_url });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Bulletin created!");
-      setTitle(""); setContent("");
+      setTitle(""); setContent(""); setFile(null);
+      setUploading(false);
       qc.invalidateQueries({ queryKey: ["admin-bulletins"] });
       qc.invalidateQueries({ queryKey: ["bulletins"] });
     },
-    onError: () => toast.error("Failed to create bulletin."),
+    onError: (err: any) => { toast.error(err?.message || "Failed to create bulletin."); setUploading(false); },
   });
 
   const del = useMutation({
@@ -171,8 +186,15 @@ function BulletinsAdmin({ userId }: { userId: string }) {
           <div><Label className="font-body">Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
           <div><Label className="font-body">Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
           <div><Label className="font-body">Content</Label><Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} /></div>
-          <Button onClick={() => create.mutate()} disabled={!title || !content || create.isPending} className="font-body">
-            {create.isPending ? "Creating..." : "Create Bulletin"}
+          <div className="rounded-lg border border-border p-4 space-y-2">
+            <p className="font-body text-sm font-semibold text-foreground">Attachment (optional)</p>
+            <Label className="font-body text-sm text-muted-foreground">Upload a PDF, image, or document</Label>
+            <Input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            {file && <p className="text-xs text-muted-foreground font-body">Selected: {file.name}</p>}
+          </div>
+          <Button onClick={() => create.mutate()} disabled={!title || !content || uploading || create.isPending} className="font-body">
+            <Upload size={16} className="mr-2" />
+            {uploading ? "Uploading…" : "Create Bulletin"}
           </Button>
         </CardContent>
       </Card>
@@ -184,6 +206,11 @@ function BulletinsAdmin({ userId }: { userId: string }) {
                 <p className="font-display font-semibold">{b.title}</p>
                 <p className="text-xs text-muted-foreground font-body">{format(new Date(b.date), "MMMM d, yyyy")}</p>
                 <p className="mt-1 text-sm text-muted-foreground font-body whitespace-pre-line">{b.content}</p>
+                {b.file_url && (
+                  <a href={b.file_url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-accent font-body">
+                    📎 Attachment
+                  </a>
+                )}
               </div>
               <Button variant="ghost" size="icon" onClick={() => del.mutate(b.id)}><Trash2 size={16} className="text-destructive" /></Button>
             </CardContent>
