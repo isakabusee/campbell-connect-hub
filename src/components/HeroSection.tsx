@@ -10,10 +10,7 @@ const HeroSection = () => (
       alt="Campbell Seventh-day Adventist Church"
       className="absolute inset-0 h-full w-full object-cover"
     />
-    <div
-      className="absolute inset-0"
-      style={{ background: "var(--hero-overlay)" }}
-    />
+    <div className="absolute inset-0" style={{ background: "var(--hero-overlay)" }} />
     <div className="container relative z-10 py-20 text-center">
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
@@ -37,7 +34,11 @@ const HeroSection = () => (
         transition={{ duration: 0.7, delay: 0.4 }}
         className="mt-8 flex flex-wrap justify-center gap-4"
       >
-        <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 font-body font-semibold">
+        <Button
+          asChild
+          size="lg"
+          className="bg-accent text-accent-foreground hover:bg-accent/90 font-body font-semibold"
+        >
           <Link to="/contact">Visit Us</Link>
         </Button>
         <Button
@@ -45,7 +46,11 @@ const HeroSection = () => (
           size="lg"
           className="bg-accent text-accent-foreground hover:bg-accent/90 font-body font-semibold"
         >
-          <a href="https://www.youtube.com/@campbellseventh-dayadventi6649/streams" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://www.youtube.com/@campbellseventh-dayadventi6649/streams"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Online Worship
           </a>
         </Button>
