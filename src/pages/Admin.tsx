@@ -178,6 +178,17 @@ function BulletinsAdmin({ userId }: { userId: string }) {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const compressIfImage = async (file: File): Promise<File> => {
+    const imageTypes = ["image/jpeg", "image/png", "image/webp", "image/bmp"];
+    if (!imageTypes.includes(file.type)) return file;
+    const imageCompression = (await import("browser-image-compression")).default;
+    return imageCompression(file, {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    });
+  };
+
   const create = useMutation({
     mutationFn: async () => {
       setUploading(true);
@@ -186,9 +197,10 @@ function BulletinsAdmin({ userId }: { userId: string }) {
       const total = files.length || 1;
       const file_urls = await Promise.all(
         files.map(async (file) => {
+          const compressed = await compressIfImage(file);
           const ext = file.name.split(".").pop();
           const path = `${crypto.randomUUID()}.${ext}`;
-          const { error: uploadError } = await supabase.storage.from("bulletins").upload(path, file);
+          const { error: uploadError } = await supabase.storage.from("bulletins").upload(path, compressed);
           if (uploadError) throw uploadError;
           completed++;
           setUploadProgress(Math.round((completed / total) * 100));
