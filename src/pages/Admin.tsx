@@ -60,6 +60,7 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const { data: items } = useQuery({
     queryKey: ["admin-announcements"],
@@ -73,16 +74,21 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
   const create = useMutation({
     mutationFn: async () => {
       setUploading(true);
+      setUploadProgress(0);
       let file_url: string | null = null;
 
       if (file) {
+        setUploadProgress(10);
         const compressed = await compressIfImage(file);
+        setUploadProgress(40);
         const ext = file.name.split(".").pop();
         const path = `${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabase.storage.from("bulletins").upload(path, compressed);
         if (uploadError) throw uploadError;
+        setUploadProgress(90);
         const { data: urlData } = supabase.storage.from("bulletins").getPublicUrl(path);
         file_url = urlData.publicUrl;
+        setUploadProgress(100);
       }
 
       const { error } = await supabase.from("announcements").insert({ title, content, author_id: userId, file_url });
@@ -91,7 +97,7 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
     onSuccess: () => {
       toast.success("Announcement created!");
       setTitle(""); setContent(""); setFile(null);
-      setUploading(false);
+      setUploading(false); setUploadProgress(0);
       qc.invalidateQueries({ queryKey: ["admin-announcements"] });
       qc.invalidateQueries({ queryKey: ["announcements"] });
     },
@@ -123,6 +129,20 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
             <Input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
             {file && <p className="text-xs text-muted-foreground font-body">Selected: {file.name}</p>}
           </div>
+          {uploading && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs font-body text-muted-foreground">
+                <span>Uploading file…</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-accent transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
           <Button onClick={() => create.mutate()} disabled={!title || !content || uploading || create.isPending} className="font-body">
             <Upload size={16} className="mr-2" />
             {uploading ? "Uploading…" : "Create Announcement"}
