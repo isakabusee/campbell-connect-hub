@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Trash2, Upload, CalendarDays } from "lucide-react";
+import { Trash2, Upload, CalendarDays, ImagePlus, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { supabase as sb } from "@/integrations/supabase/client";
 
@@ -29,17 +29,19 @@ const AdminPage = () => {
         <div className="container">
           <h1 className="mb-8 font-display text-4xl font-bold">Admin Dashboard</h1>
           <Tabs defaultValue="announcements">
-            <TabsList className="mb-6">
+            <TabsList className="mb-6 flex-wrap">
               <TabsTrigger value="announcements" className="font-body">Announcements</TabsTrigger>
               <TabsTrigger value="bulletins" className="font-body">Bulletins</TabsTrigger>
               <TabsTrigger value="sermons" className="font-body">Sermons</TabsTrigger>
               <TabsTrigger value="events" className="font-body">Events</TabsTrigger>
+              <TabsTrigger value="gallery" className="font-body">Gallery</TabsTrigger>
               <TabsTrigger value="messages" className="font-body">Messages</TabsTrigger>
             </TabsList>
             <TabsContent value="announcements"><AnnouncementsAdmin userId={user.id} /></TabsContent>
             <TabsContent value="bulletins"><BulletinsAdmin userId={user.id} /></TabsContent>
             <TabsContent value="sermons"><SermonsAdmin userId={user.id} /></TabsContent>
             <TabsContent value="events"><EventsAdmin userId={user.id} /></TabsContent>
+            <TabsContent value="gallery"><GalleryAdmin userId={user.id} /></TabsContent>
             <TabsContent value="messages"><MessagesAdmin /></TabsContent>
           </Tabs>
         </div>
@@ -431,6 +433,181 @@ function EventsAdmin({ userId }: { userId: string }) {
               </div>
               <Button variant="ghost" size="icon" onClick={() => del.mutate(ev.id)}><Trash2 size={16} className="text-destructive" /></Button>
             </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GalleryAdmin({ userId }: { userId: string }) {
+  const qc = useQueryClient();
+  const [albumTitle, setAlbumTitle] = useState("");
+  const [albumDesc, setAlbumDesc] = useState("");
+  const [albumDate, setAlbumDate] = useState("");
+  const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
+  const [photoFiles, setPhotoFiles] = useState<FileList | null>(null);
+  const [caption, setCaption] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  const { data: albums } = useQuery({
+    queryKey: ["admin-albums"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("albums")
+        .select("*, photos(id, url, caption)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const createAlbum = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("albums").insert({
+        title: albumTitle,
+        description: albumDesc || null,
+        event_date: albumDate || null,
+        author_id: userId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Album created!");
+      setAlbumTitle(""); setAlbumDesc(""); setAlbumDate("");
+      qc.invalidateQueries({ queryKey: ["admin-albums"] });
+      qc.invalidateQueries({ queryKey: ["albums"] });
+    },
+    onError: (err: any) => toast.error(err?.message || "Failed to create album."),
+  });
+
+  const deleteAlbum = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("albums").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-albums"] });
+      qc.invalidateQueries({ queryKey: ["albums"] });
+      setSelectedAlbumId(null);
+    },
+  });
+
+  const uploadPhotos = useMutation({
+    mutationFn: async () => {
+      if (!photoFiles || !selectedAlbumId) return;
+      setUploading(true);
+      for (let i = 0; i < photoFiles.length; i++) {
+        const file = photoFiles[i];
+        const ext = file.name.split(".").pop();
+        const path = `${selectedAlbumId}/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("gallery").upload(path, file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(path);
+        const { error: insertError } = await supabase.from("photos").insert({
+          album_id: selectedAlbumId,
+          url: urlData.publicUrl,
+          caption: caption || null,
+          sort_order: i,
+        });
+        if (insertError) throw insertError;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Photos uploaded!");
+      setPhotoFiles(null); setCaption("");
+      setUploading(false);
+      qc.invalidateQueries({ queryKey: ["admin-albums"] });
+      qc.invalidateQueries({ queryKey: ["albums"] });
+    },
+    onError: (err: any) => { toast.error(err?.message || "Failed to upload photos."); setUploading(false); },
+  });
+
+  const deletePhoto = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("photos").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-albums"] });
+      qc.invalidateQueries({ queryKey: ["albums"] });
+    },
+  });
+
+  const activeAlbum = albums?.find((a) => a.id === selectedAlbumId);
+
+  return (
+    <div className="space-y-6">
+      {/* Create Album */}
+      <Card>
+        <CardHeader><CardTitle className="font-display">New Album</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label className="font-body">Title</Label><Input value={albumTitle} onChange={(e) => setAlbumTitle(e.target.value)} /></div>
+            <div><Label className="font-body">Event Date (optional)</Label><Input type="date" value={albumDate} onChange={(e) => setAlbumDate(e.target.value)} /></div>
+          </div>
+          <div><Label className="font-body">Description (optional)</Label><Textarea rows={2} value={albumDesc} onChange={(e) => setAlbumDesc(e.target.value)} /></div>
+          <Button onClick={() => createAlbum.mutate()} disabled={!albumTitle || createAlbum.isPending} className="font-body">
+            <Plus size={16} className="mr-2" />
+            {createAlbum.isPending ? "Creating…" : "Create Album"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Album List */}
+      <div className="space-y-3">
+        {albums?.map((album) => (
+          <Card key={album.id} className={`cursor-pointer transition-colors ${selectedAlbumId === album.id ? "ring-2 ring-accent" : ""}`}>
+            <CardContent className="flex items-start justify-between pt-4" onClick={() => setSelectedAlbumId(selectedAlbumId === album.id ? null : album.id)}>
+              <div>
+                <p className="font-display font-semibold">{album.title}</p>
+                <p className="text-xs text-muted-foreground font-body">
+                  {album.event_date && format(new Date(album.event_date), "MMM d, yyyy") + " · "}
+                  {(album.photos as any[])?.length ?? 0} photos
+                </p>
+                {album.description && <p className="mt-1 text-sm text-muted-foreground font-body">{album.description}</p>}
+              </div>
+              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deleteAlbum.mutate(album.id); }}>
+                <Trash2 size={16} className="text-destructive" />
+              </Button>
+            </CardContent>
+
+            {/* Expanded: upload photos & view existing */}
+            {selectedAlbumId === album.id && (
+              <CardContent className="border-t border-border pt-4 space-y-4">
+                <div className="space-y-3">
+                  <div>
+                    <Label className="font-body">Upload Photos</Label>
+                    <Input type="file" accept="image/*" multiple onChange={(e) => setPhotoFiles(e.target.files)} />
+                  </div>
+                  <div>
+                    <Label className="font-body">Caption (applied to all)</Label>
+                    <Input value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Optional caption" />
+                  </div>
+                  <Button onClick={() => uploadPhotos.mutate()} disabled={!photoFiles?.length || uploading} className="font-body">
+                    <ImagePlus size={16} className="mr-2" />
+                    {uploading ? "Uploading…" : "Upload Photos"}
+                  </Button>
+                </div>
+
+                {/* Existing photos grid */}
+                {(activeAlbum?.photos as any[])?.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {(activeAlbum?.photos as any[])?.map((photo: any) => (
+                      <div key={photo.id} className="group relative overflow-hidden rounded-lg">
+                        <img src={photo.url} alt={photo.caption || ""} className="aspect-square w-full object-cover" />
+                        <button
+                          onClick={() => deletePhoto.mutate(photo.id)}
+                          className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            )}
           </Card>
         ))}
       </div>
