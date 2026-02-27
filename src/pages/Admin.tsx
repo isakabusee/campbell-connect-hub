@@ -280,7 +280,7 @@ function SermonsAdmin({ userId }: { userId: string }) {
       qc.invalidateQueries({ queryKey: ["admin-sermons"] });
       qc.invalidateQueries({ queryKey: ["sermons"] });
     },
-    onError: () => { toast.error("Failed to add sermon."); setUploading(false); },
+    onError: (err: any) => { toast.error(err?.message || "Failed to add sermon."); setUploading(false); },
   });
 
   const del = useMutation({
