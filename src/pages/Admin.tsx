@@ -227,6 +227,7 @@ function SermonsAdmin({ userId }: { userId: string }) {
   const [description, setDescription] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoLink, setVideoLink] = useState("");
   const [uploading, setUploading] = useState(false);
 
   const { data: items } = useQuery({
@@ -263,13 +264,18 @@ function SermonsAdmin({ userId }: { userId: string }) {
       }
 
       const { error } = await supabase.from("sermons").insert({
-        title, speaker, date, description: description || null, audio_url, video_url, author_id: userId,
+        title, speaker, date,
+        description: description || null,
+        audio_url,
+        video_url,
+        video_link: videoLink || null,
+        author_id: userId,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Sermon added!");
-      setTitle(""); setSpeaker(""); setDescription(""); setAudioFile(null); setVideoFile(null);
+      setTitle(""); setSpeaker(""); setDescription(""); setAudioFile(null); setVideoFile(null); setVideoLink("");
       setUploading(false);
       qc.invalidateQueries({ queryKey: ["admin-sermons"] });
       qc.invalidateQueries({ queryKey: ["sermons"] });
@@ -293,17 +299,26 @@ function SermonsAdmin({ userId }: { userId: string }) {
       <Card>
         <CardHeader><CardTitle className="font-display">New Sermon</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <div><Label className="font-body">Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
-          <div><Label className="font-body">Speaker</Label><Input value={speaker} onChange={(e) => setSpeaker(e.target.value)} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label className="font-body">Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+            <div><Label className="font-body">Speaker</Label><Input value={speaker} onChange={(e) => setSpeaker(e.target.value)} /></div>
+          </div>
           <div><Label className="font-body">Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
           <div><Label className="font-body">Description (optional)</Label><Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} /></div>
-          <div>
-            <Label className="font-body">Audio File (MP3)</Label>
-            <Input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files?.[0] ?? null)} />
-          </div>
-          <div>
-            <Label className="font-body">Video File (MP4)</Label>
-            <Input type="file" accept="video/*" onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)} />
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <p className="font-body text-sm font-semibold text-foreground">Media</p>
+            <div>
+              <Label className="font-body">Audio File (MP3)</Label>
+              <Input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files?.[0] ?? null)} />
+            </div>
+            <div>
+              <Label className="font-body">Video File (MP4) — or use a link below</Label>
+              <Input type="file" accept="video/*" onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)} />
+            </div>
+            <div>
+              <Label className="font-body">YouTube / Vimeo Link</Label>
+              <Input value={videoLink} onChange={(e) => setVideoLink(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
+            </div>
           </div>
           <Button onClick={() => create.mutate()} disabled={!title || !speaker || uploading || create.isPending} className="font-body">
             <Upload size={16} className="mr-2" />
@@ -319,8 +334,11 @@ function SermonsAdmin({ userId }: { userId: string }) {
                 <p className="font-display font-semibold">{s.title}</p>
                 <p className="text-xs text-muted-foreground font-body">{s.speaker} — {format(new Date(s.date), "MMMM d, yyyy")}</p>
                 {s.description && <p className="mt-1 text-sm text-muted-foreground font-body">{s.description}</p>}
-                {s.audio_url && <p className="text-xs text-accent font-body mt-1">🎵 Audio attached</p>}
-                {s.video_url && <p className="text-xs text-accent font-body mt-1">🎬 Video attached</p>}
+                <div className="mt-1 flex gap-3">
+                  {s.audio_url && <span className="text-xs text-accent font-body">🎵 Audio</span>}
+                  {s.video_url && <span className="text-xs text-accent font-body">🎬 Video</span>}
+                  {s.video_link && <span className="text-xs text-accent font-body">🔗 Link</span>}
+                </div>
               </div>
               <Button variant="ghost" size="icon" onClick={() => del.mutate(s.id)}><Trash2 size={16} className="text-destructive" /></Button>
             </CardContent>
