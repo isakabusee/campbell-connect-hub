@@ -14,7 +14,7 @@ import { User, Mail, Phone, Edit2, Save, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Directory = () => {
-  const { user } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -78,7 +78,9 @@ const Directory = () => {
     p.display_name.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (!user) {
+  if (loading) return null;
+
+  if (!user || !isAdmin) {
     return (
       <div className="flex min-h-screen flex-col">
         <Navbar />
@@ -87,11 +89,7 @@ const Directory = () => {
             <User size={48} className="mx-auto text-muted-foreground" />
             <h1 className="font-display text-3xl font-bold">Members Directory</h1>
             <p className="text-muted-foreground font-body">
-              Please{" "}
-              <Link to="/login" className="text-accent underline">
-                sign in
-              </Link>{" "}
-              to view the church directory.
+              This page is only accessible to administrators.
             </p>
           </div>
         </main>
