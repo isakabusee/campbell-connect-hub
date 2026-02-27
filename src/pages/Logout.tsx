@@ -1,23 +1,38 @@
-import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Logout = () => {
-  const [done, setDone] = useState(false);
-
   useEffect(() => {
-    const run = async () => {
-      await supabase.auth.signOut();
-      setDone(true);
-    };
+    // Force-clear session from localStorage immediately
+    const storageKey = Object.keys(localStorage).find((k) =>
+      k.startsWith("sb-") && k.endsWith("-auth-token")
+    );
+    if (storageKey) {
+      localStorage.removeItem(storageKey);
+    }
 
-    void run();
+    // Attempt signOut but don't wait on it indefinitely
+    const timeout = setTimeout(() => {
+      window.location.href = "/";
+    }, 2000);
+
+    supabase.auth
+      .signOut({ scope: "local" })
+      .then(() => {
+        clearTimeout(timeout);
+        window.location.href = "/";
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        window.location.href = "/";
+      });
   }, []);
 
-  if (done) return <Navigate to="/" replace />;
-
-  return <div className="min-h-screen bg-background" />;
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <p className="font-body text-muted-foreground">Signing out…</p>
+    </div>
+  );
 };
 
 export default Logout;
-
