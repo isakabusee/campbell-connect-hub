@@ -56,9 +56,8 @@ const HeroSection = () => (
         </Button>
         <Button
           asChild
-          variant="outline"
           size="lg"
-          className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 font-body"
+          className="bg-accent text-accent-foreground hover:bg-accent/90 font-body font-semibold"
         >
           <Link to="/announcements">Announcements</Link>
         </Button>
