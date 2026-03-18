@@ -11,7 +11,7 @@ const Navbar = () => {
 
   const links = [
     { to: "/", label: "Home" },
-    { to: "/announcements", label: "Announcements" },
+    { to: "/announcements", label: "Announcements", className: "text-primary" },
     { to: "/bulletins", label: "Bulletins" },
     { to: "/sermons", label: "Sermons" },
     { to: "/events", label: "Events" },
