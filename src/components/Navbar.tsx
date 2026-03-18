@@ -11,7 +11,7 @@ const Navbar = () => {
 
   const links = [
     { to: "/", label: "Home" },
-    { to: "/announcements", label: "Announcements", className: "text-primary" },
+    { to: "/announcements", label: "Announcements" },
     { to: "/bulletins", label: "Bulletins" },
     { to: "/sermons", label: "Sermons" },
     { to: "/events", label: "Events" },
@@ -39,7 +39,7 @@ const Navbar = () => {
               key={link.to}
               to={link.to}
               className={`font-body text-sm font-medium transition-colors hover:text-accent ${
-                link.className ? link.className : (location.pathname === link.to ? "text-accent" : "text-muted-foreground")
+                location.pathname === link.to ? "text-accent" : "text-muted-foreground"
               }`}
             >
               {link.label}
@@ -72,7 +72,7 @@ const Navbar = () => {
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
                 className={`font-body text-sm font-medium transition-colors hover:text-accent ${
-                  link.className ? link.className : (location.pathname === link.to ? "text-accent" : "text-muted-foreground")
+                  location.pathname === link.to ? "text-accent" : "text-muted-foreground"
                 }`}
               >
                 {link.label}
