@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+#Campbell Seventh Day Adventist church app Welcome to your Lovable project
 
 ## Project info
 
