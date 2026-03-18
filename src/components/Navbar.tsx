@@ -39,7 +39,7 @@ const Navbar = () => {
               key={link.to}
               to={link.to}
               className={`font-body text-sm font-medium transition-colors hover:text-accent ${
-                location.pathname === link.to ? "text-accent" : "text-muted-foreground"
+                link.className ? link.className : (location.pathname === link.to ? "text-accent" : "text-muted-foreground")
               }`}
             >
               {link.label}
