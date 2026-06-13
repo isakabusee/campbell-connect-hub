@@ -7,14 +7,10 @@ const Footer = () => (
       <div className="grid gap-8 md:grid-cols-3">
         <div>
           <h3 className="mb-3 font-display text-lg font-semibold">Campbell SDA Church</h3>
-          <p className="font-body text-sm opacity-80">
-            A welcoming community of believers sharing the love of Christ.
-          </p>
+          <p className="font-body text-sm opacity-80">A welcoming community of believers sharing the love of Christ.</p>
         </div>
         <div>
-          <h4 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider opacity-70">
-            Service Times
-          </h4>
+          <h4 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider opacity-70">Service Times</h4>
           <ul className="space-y-2 font-body text-sm opacity-80">
             <li className="flex items-center gap-2">
               <Clock size={14} /> Sabbath School: 9:30 AM
@@ -25,15 +21,13 @@ const Footer = () => (
           </ul>
         </div>
         <div>
-          <h4 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider opacity-70">
-            Contact
-          </h4>
+          <h4 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider opacity-70">Contact</h4>
           <ul className="space-y-2 font-body text-sm opacity-80">
             <li className="flex items-center gap-2">
               <MapPin size={14} /> 42 W Campbell Ave, Campbell, CA
             </li>
             <li className="flex items-center gap-2">
-              <Phone size={14} /> (408) 378-7422
+              <Phone size={14} /> (408) 866-4625
             </li>
           </ul>
         </div>
