@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import Announcements from "./pages/Announcements";
 import Events from "./pages/Events";
 import Bulletins from "./pages/Bulletins";
-import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Sermons from "./pages/Sermons";
