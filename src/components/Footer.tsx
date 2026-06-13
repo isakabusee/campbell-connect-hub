@@ -24,7 +24,7 @@ const Footer = () => (
           <h4 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider opacity-70">Contact</h4>
           <ul className="space-y-2 font-body text-sm opacity-80">
             <li className="flex items-center gap-2">
-              <MapPin size={14} /> 42 W Campbell Ave, Campbell, CA
+              <MapPin size={14} /> 600 W Campbell Ave, Campbell, CA
             </li>
             <li className="flex items-center gap-2">
               <Phone size={14} /> (408) 866-4625
