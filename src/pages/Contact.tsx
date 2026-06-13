@@ -63,7 +63,7 @@ const ContactPage = () => {
                   <MapPin size={18} className="mt-0.5 text-accent" />
                   <div>
                     <p className="font-semibold">Address</p>
-                    <p className="text-muted-foreground">42 W Campbell Ave, Campbell, CA 95008</p>
+                    <p className="text-muted-foreground">600 W Campbell Ave, Campbell, CA 95008</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
