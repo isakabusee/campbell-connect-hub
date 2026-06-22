@@ -18,7 +18,7 @@ const Index = () => {
         <section className="py-16">
           <div className="container">
             <div className="mx-auto max-w-4xl text-center">
-              <h2 className="font-display text-3xl font-bold md:text-4xl">About Our Church</h2>
+              <h2 className="font-display text-3xl font-bold md:text-4xl">About Us</h2>
               <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
                 Campbell Seventh-day Adventist Church is a vibrant, faith-driven community nestled in the heart of Campbell, California. We are part of the worldwide Seventh-day Adventist Church, a Protestant Christian denomination distinguished by its observance of Saturday, the seventh day of the week, as the Sabbath.
               </p>
