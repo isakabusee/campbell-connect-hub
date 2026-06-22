@@ -45,7 +45,7 @@
     --sidebar-border: 220 40% 30%;
     --sidebar-ring: 38 75% 55%;
 
-    --hero-overlay: linear-gradient(135deg, hsla(220, 55%, 15%, 0.85), hsla(220, 55%, 22%, 0.7));
+    --hero-overlay: linear-gradient(135deg, hsla(220, 55%, 15%, 0.55), hsla(220, 55%, 22%, 0.45));
     --gold-gradient: linear-gradient(135deg, hsl(38, 75%, 55%), hsl(42, 85%, 65%));
     --navy-gradient: linear-gradient(180deg, hsl(220, 55%, 22%), hsl(220, 55%, 15%));
 
