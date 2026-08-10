@@ -40,18 +40,36 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
                 <p className="mt-2 font-body text-sm text-muted-foreground leading-relaxed line-clamp-3">{b.content}</p>
               )}
               {b.file_urls && b.file_urls.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-3">
-                  {b.file_urls.map((url, i) => (
-                    <a
-                      key={i}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-accent font-body hover:underline"
-                    >
-                      View PDF {b.file_urls!.length > 1 ? i + 1 : ""}
-                    </a>
-                  ))}
+                <div className="mt-3 space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {b.file_urls
+                      .filter((url) => /\.(png|jpe?g|webp|gif|svg)$/i.test(url))
+                      .map((url, i) => (
+                        <a key={`img-${i}`} href={url} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src={url}
+                            alt={`${b.title} attachment ${i + 1}`}
+                            className="h-32 w-auto rounded-md object-cover shadow-sm"
+                            loading="lazy"
+                          />
+                        </a>
+                      ))}
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {b.file_urls
+                      .filter((url) => !/\.(png|jpe?g|webp|gif|svg)$/i.test(url))
+                      .map((url, i) => (
+                        <a
+                          key={`doc-${i}`}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-accent font-body hover:underline"
+                        >
+                          View document {b.file_urls!.filter((u) => !/\.(png|jpe?g|webp|gif|svg)$/i.test(u)).length > 1 ? i + 1 : ""}
+                        </a>
+                      ))}
+                  </div>
                 </div>
               )}
             </div>
