@@ -133,10 +133,6 @@ const SmallGroups = () => {
                       {group.location && (
                         <p className="flex items-center gap-1"><MapPin size={12} /> {group.location}</p>
                       )}
-                      <p className="flex items-center gap-1">
-                        <Users size={12} /> {count} member{count !== 1 ? "s" : ""}
-                        {group.max_members && ` / ${group.max_members}`}
-                      </p>
                     </div>
 
                     {user && (
