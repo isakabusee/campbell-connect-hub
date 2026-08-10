@@ -664,17 +664,67 @@ function GalleryAdmin({ userId }: { userId: string }) {
   });
 
   const deletePhoto = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("photos").delete().eq("id", id);
+    mutationFn: async (photo: { id: string; url: string; album_id?: string }) => {
+      const { error } = await supabase.from("photos").delete().eq("id", photo.id);
       if (error) throw error;
+      // If this photo was the album cover, promote the next remaining photo.
+      const album = albums?.find((a) => a.id === selectedAlbumId);
+      if (album && album.cover_url === photo.url) {
+        const next = (album.photos as any[])
+          .filter((p) => p.id !== photo.id)
+          .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0];
+        await supabase.from("albums").update({ cover_url: next?.url ?? null }).eq("id", album.id);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-albums"] });
       qc.invalidateQueries({ queryKey: ["albums"] });
     },
+    onError: (err: any) => toast.error(err?.message || "Failed to delete photo."),
+  });
+
+  const setCover = useMutation({
+    mutationFn: async ({ albumId, url }: { albumId: string; url: string }) => {
+      const { error } = await supabase.from("albums").update({ cover_url: url }).eq("id", albumId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Cover image updated.");
+      qc.invalidateQueries({ queryKey: ["admin-albums"] });
+      qc.invalidateQueries({ queryKey: ["albums"] });
+    },
+    onError: (err: any) => toast.error(err?.message || "Failed to set cover."),
+  });
+
+  const reorderPhotos = useMutation({
+    mutationFn: async ({ ordered }: { ordered: any[] }) => {
+      await Promise.all(
+        ordered.map((p, i) =>
+          supabase.from("photos").update({ sort_order: i }).eq("id", p.id).then(({ error }) => {
+            if (error) throw error;
+          }),
+        ),
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-albums"] });
+      qc.invalidateQueries({ queryKey: ["albums"] });
+    },
+    onError: (err: any) => toast.error(err?.message || "Failed to reorder photos."),
   });
 
   const activeAlbum = albums?.find((a) => a.id === selectedAlbumId);
+  const activePhotos = ((activeAlbum?.photos as any[]) ?? [])
+    .slice()
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+  const movePhoto = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= activePhotos.length) return;
+    const ordered = activePhotos.slice();
+    [ordered[index], ordered[target]] = [ordered[target], ordered[index]];
+    reorderPhotos.mutate({ ordered });
+  };
 
   return (
     <div className="space-y-6">
