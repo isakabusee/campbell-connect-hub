@@ -220,6 +220,27 @@ export type Database = {
           },
         ]
       }
+      profile_contacts: {
+        Row: {
+          created_at: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -227,7 +248,6 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
-          phone: string | null
           updated_at: string
           user_id: string
           visible_in_directory: boolean
@@ -238,7 +258,6 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
-          phone?: string | null
           updated_at?: string
           user_id: string
           visible_in_directory?: boolean
@@ -249,7 +268,6 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
-          phone?: string | null
           updated_at?: string
           user_id?: string
           visible_in_directory?: boolean
@@ -392,30 +410,7 @@ export type Database = {
       }
     }
     Views: {
-      directory_profiles: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          display_name: string | null
-          id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          display_name?: string | null
-          id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          display_name?: string | null
-          id?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_group_member_counts: {
