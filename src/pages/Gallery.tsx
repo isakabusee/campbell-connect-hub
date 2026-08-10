@@ -3,9 +3,51 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+
+/** Image that fades in once decoded, showing a skeleton placeholder until then. */
+const LazyImage = ({
+  src,
+  alt,
+  className = "",
+  wrapperClassName = "",
+  eager = false,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  wrapperClassName?: string;
+  eager?: boolean;
+}) => {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <div className={`relative overflow-hidden bg-muted ${wrapperClassName}`}>
+      {!loaded && !failed && <Skeleton className="absolute inset-0 h-full w-full rounded-none" />}
+      {failed ? (
+        <div className="flex h-full min-h-[8rem] w-full items-center justify-center">
+          <Camera size={28} className="text-muted-foreground/40" aria-hidden="true" />
+          <span className="sr-only">Image unavailable</span>
+        </div>
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          fetchPriority={eager ? "high" : "low"}
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+          className={`${className} transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        />
+      )}
+    </div>
+  );
+};
 
 const GalleryPage = () => {
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
@@ -53,6 +95,20 @@ const GalleryPage = () => {
     };
   }, [lightbox, closeLightbox, prevPhoto, nextPhoto]);
 
+  // Prefetch the neighbouring photos so swiping/arrowing feels instant
+  useEffect(() => {
+    if (!lightbox) return;
+    const { photos, index } = lightbox;
+    [index + 1, index - 1].forEach((i) => {
+      const photo = photos[(i + photos.length) % photos.length];
+      if (photo?.url) {
+        const img = new Image();
+        img.decoding = "async";
+        img.src = photo.url;
+      }
+    });
+  }, [lightbox]);
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -68,7 +124,19 @@ const GalleryPage = () => {
         </div>
 
         <div className="container py-12">
-          {isLoading && <p className="font-body text-muted-foreground">Loading gallery…</p>}
+          {isLoading && (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true" aria-label="Loading gallery">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                  <Skeleton className="aspect-[4/3] w-full rounded-none" />
+                  <CardContent className="space-y-2 pt-4">
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
           {/* Album detail view */}
           {selectedAlbum && activeAlbum ? (
@@ -101,11 +169,12 @@ const GalleryPage = () => {
                       className="group mb-4 block w-full cursor-pointer break-inside-avoid overflow-hidden rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       onClick={() => openLightbox(sortedPhotos, idx)}
                     >
-                      <img
+                      <LazyImage
                         src={photo.url}
                         alt={photo.caption || "Church photo"}
+                        eager={idx < 4}
+                        wrapperClassName="min-h-[8rem] rounded-lg"
                         className="w-full rounded-lg transition-transform duration-300 group-hover:scale-105"
-                        loading="lazy"
                       />
                       {photo.caption && (
                         <p className="mt-1 font-body text-xs text-muted-foreground">{photo.caption}</p>
@@ -126,7 +195,7 @@ const GalleryPage = () => {
                 </div>
               )}
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {albums?.map((album) => {
+                {albums?.map((album, albumIdx) => {
                   const photoCount = album.photos?.length ?? 0;
                   const cover = album.cover_url || (album.photos as any)?.[0]?.url;
                   return (
@@ -137,11 +206,12 @@ const GalleryPage = () => {
                     >
                       <div className="relative aspect-[4/3] overflow-hidden bg-primary/5">
                         {cover ? (
-                          <img
+                          <LazyImage
                             src={cover}
                             alt={album.title}
+                            eager={albumIdx < 3}
+                            wrapperClassName="absolute inset-0 h-full w-full"
                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            loading="lazy"
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center">
@@ -204,9 +274,12 @@ const GalleryPage = () => {
             </>
           )}
           <div className="max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
-            <img
+            <LazyImage
+              key={lightbox.photos[lightbox.index].id}
               src={lightbox.photos[lightbox.index].url}
               alt={lightbox.photos[lightbox.index].caption || "Photo"}
+              eager
+              wrapperClassName="min-h-[12rem] rounded-lg bg-white/5"
               className="max-h-[85vh] max-w-full rounded-lg object-contain"
             />
             {lightbox.photos[lightbox.index].caption && (
