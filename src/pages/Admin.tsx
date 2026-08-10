@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Trash2, Upload, CalendarDays, ImagePlus, Plus, Users } from "lucide-react";
+import { Trash2, Upload, CalendarDays, ImagePlus, Plus, Users, ArrowLeft, ArrowRight, Star } from "lucide-react";
 import { format } from "date-fns";
 import { supabase as sb } from "@/integrations/supabase/client";
 
@@ -578,7 +578,7 @@ function GalleryAdmin({ userId }: { userId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("albums")
-        .select("*, photos(id, url, caption)")
+        .select("*, photos(id, url, caption, sort_order)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -637,6 +637,7 @@ function GalleryAdmin({ userId }: { userId: string }) {
     mutationFn: async () => {
       if (!photoFiles || !selectedAlbumId) return;
       setUploading(true);
+      const offset = ((albums?.find((a) => a.id === selectedAlbumId)?.photos as any[]) ?? []).length;
       for (let i = 0; i < photoFiles.length; i++) {
         const file = photoFiles[i];
         const ext = file.name.split(".").pop();
@@ -648,7 +649,7 @@ function GalleryAdmin({ userId }: { userId: string }) {
           album_id: selectedAlbumId,
           url: urlData.publicUrl,
           caption: caption || null,
-          sort_order: i,
+          sort_order: offset + i,
         });
         if (insertError) throw insertError;
       }
@@ -664,17 +665,67 @@ function GalleryAdmin({ userId }: { userId: string }) {
   });
 
   const deletePhoto = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("photos").delete().eq("id", id);
+    mutationFn: async (photo: { id: string; url: string; album_id?: string }) => {
+      const { error } = await supabase.from("photos").delete().eq("id", photo.id);
       if (error) throw error;
+      // If this photo was the album cover, promote the next remaining photo.
+      const album = albums?.find((a) => a.id === selectedAlbumId);
+      if (album && album.cover_url === photo.url) {
+        const next = (album.photos as any[])
+          .filter((p) => p.id !== photo.id)
+          .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0];
+        await supabase.from("albums").update({ cover_url: next?.url ?? null }).eq("id", album.id);
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-albums"] });
       qc.invalidateQueries({ queryKey: ["albums"] });
     },
+    onError: (err: any) => toast.error(err?.message || "Failed to delete photo."),
+  });
+
+  const setCover = useMutation({
+    mutationFn: async ({ albumId, url }: { albumId: string; url: string }) => {
+      const { error } = await supabase.from("albums").update({ cover_url: url }).eq("id", albumId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Cover image updated.");
+      qc.invalidateQueries({ queryKey: ["admin-albums"] });
+      qc.invalidateQueries({ queryKey: ["albums"] });
+    },
+    onError: (err: any) => toast.error(err?.message || "Failed to set cover."),
+  });
+
+  const reorderPhotos = useMutation({
+    mutationFn: async ({ ordered }: { ordered: any[] }) => {
+      await Promise.all(
+        ordered.map((p, i) =>
+          supabase.from("photos").update({ sort_order: i }).eq("id", p.id).then(({ error }) => {
+            if (error) throw error;
+          }),
+        ),
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-albums"] });
+      qc.invalidateQueries({ queryKey: ["albums"] });
+    },
+    onError: (err: any) => toast.error(err?.message || "Failed to reorder photos."),
   });
 
   const activeAlbum = albums?.find((a) => a.id === selectedAlbumId);
+  const activePhotos = ((activeAlbum?.photos as any[]) ?? [])
+    .slice()
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+  const movePhoto = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= activePhotos.length) return;
+    const ordered = activePhotos.slice();
+    [ordered[index], ordered[target]] = [ordered[target], ordered[index]];
+    reorderPhotos.mutate({ ordered });
+  };
 
   return (
     <div className="space-y-6">
@@ -764,19 +815,66 @@ function GalleryAdmin({ userId }: { userId: string }) {
                 </div>
 
                 {/* Existing photos grid */}
-                {(activeAlbum?.photos as any[])?.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2">
-                    {(activeAlbum?.photos as any[])?.map((photo: any) => (
-                      <div key={photo.id} className="group relative overflow-hidden rounded-lg">
-                        <img src={photo.url} alt={photo.caption || ""} className="aspect-square w-full object-cover" />
-                        <button
-                          onClick={() => deletePhoto.mutate(photo.id)}
-                          className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    ))}
+                {activePhotos.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="font-body text-xs text-muted-foreground">
+                      Use the arrows to reorder, the star to set the album cover, and the trash icon to remove a photo.
+                    </p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {activePhotos.map((photo: any, index: number) => {
+                        const isCover = album.cover_url === photo.url;
+                        return (
+                          <div
+                            key={photo.id}
+                            className={`group relative overflow-hidden rounded-lg ${isCover ? "ring-2 ring-accent" : "ring-1 ring-border"}`}
+                          >
+                            <img src={photo.url} alt={photo.caption || ""} className="aspect-square w-full object-cover" />
+                            {isCover && (
+                              <span className="absolute left-1 top-1 rounded bg-accent px-1.5 py-0.5 font-body text-[10px] text-accent-foreground">
+                                Cover
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              aria-label="Delete photo"
+                              onClick={() => deletePhoto.mutate(photo)}
+                              className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-destructive-foreground opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                            <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-background/80 p-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                              <button
+                                type="button"
+                                aria-label="Move photo left"
+                                disabled={index === 0 || reorderPhotos.isPending}
+                                onClick={() => movePhoto(index, -1)}
+                                className="rounded p-1 disabled:opacity-30"
+                              >
+                                <ArrowLeft size={12} />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label="Set as album cover"
+                                disabled={isCover || setCover.isPending}
+                                onClick={() => setCover.mutate({ albumId: album.id, url: photo.url })}
+                                className="rounded p-1 disabled:opacity-30"
+                              >
+                                <Star size={12} className={isCover ? "fill-current text-accent" : ""} />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label="Move photo right"
+                                disabled={index === activePhotos.length - 1 || reorderPhotos.isPending}
+                                onClick={() => movePhoto(index, 1)}
+                                className="rounded p-1 disabled:opacity-30"
+                              >
+                                <ArrowRight size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </CardContent>
