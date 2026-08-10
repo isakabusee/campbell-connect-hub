@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
   if (linkCount > 3) {
     return json({ error: { message: ['Message contains too many links.'] } }, 400)
   }
-  if (/[\u0000-\u0008\u000ب-\u001f]/.test(name + subject)) {
+  if (/[\u0000-\u0008\u000b-\u001f]/.test(name + subject)) {
     return json({ error: { name: ['Invalid characters.'] } }, 400)
   }
 
