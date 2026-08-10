@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Trash2, Upload, CalendarDays, ImagePlus, Plus, Users } from "lucide-react";
+import { Trash2, Upload, CalendarDays, ImagePlus, Plus, Users, ArrowLeft, ArrowRight, Star } from "lucide-react";
 import { format } from "date-fns";
 import { supabase as sb } from "@/integrations/supabase/client";
 
