@@ -169,27 +169,40 @@ const GalleryPage = () => {
       {/* Lightbox */}
       {lightbox && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Photo viewer"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
           onClick={closeLightbox}
         >
           <button
+            type="button"
+            aria-label="Close photo viewer"
             onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
             className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
           >
             <X size={24} />
           </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); prevPhoto(); }}
-            className="absolute left-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
-          >
-            <ChevronLeft size={28} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); nextPhoto(); }}
-            className="absolute right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
-          >
-            <ChevronRight size={28} />
-          </button>
+          {lightbox.photos.length > 1 && (
+            <>
+              <button
+                type="button"
+                aria-label="Previous photo"
+                onClick={(e) => { e.stopPropagation(); prevPhoto(); }}
+                className="absolute left-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+              >
+                <ChevronLeft size={28} />
+              </button>
+              <button
+                type="button"
+                aria-label="Next photo"
+                onClick={(e) => { e.stopPropagation(); nextPhoto(); }}
+                className="absolute right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+              >
+                <ChevronRight size={28} />
+              </button>
+            </>
+          )}
           <div className="max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
             <img
               src={lightbox.photos[lightbox.index].url}
