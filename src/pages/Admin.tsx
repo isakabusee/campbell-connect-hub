@@ -814,19 +814,66 @@ function GalleryAdmin({ userId }: { userId: string }) {
                 </div>
 
                 {/* Existing photos grid */}
-                {(activeAlbum?.photos as any[])?.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2">
-                    {(activeAlbum?.photos as any[])?.map((photo: any) => (
-                      <div key={photo.id} className="group relative overflow-hidden rounded-lg">
-                        <img src={photo.url} alt={photo.caption || ""} className="aspect-square w-full object-cover" />
-                        <button
-                          onClick={() => deletePhoto.mutate(photo.id)}
-                          className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    ))}
+                {activePhotos.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="font-body text-xs text-muted-foreground">
+                      Use the arrows to reorder, the star to set the album cover, and the trash icon to remove a photo.
+                    </p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {activePhotos.map((photo: any, index: number) => {
+                        const isCover = album.cover_url === photo.url;
+                        return (
+                          <div
+                            key={photo.id}
+                            className={`group relative overflow-hidden rounded-lg ${isCover ? "ring-2 ring-accent" : "ring-1 ring-border"}`}
+                          >
+                            <img src={photo.url} alt={photo.caption || ""} className="aspect-square w-full object-cover" />
+                            {isCover && (
+                              <span className="absolute left-1 top-1 rounded bg-accent px-1.5 py-0.5 font-body text-[10px] text-accent-foreground">
+                                Cover
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              aria-label="Delete photo"
+                              onClick={() => deletePhoto.mutate(photo)}
+                              className="absolute right-1 top-1 rounded-full bg-destructive p-1 text-destructive-foreground opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                            <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-background/80 p-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                              <button
+                                type="button"
+                                aria-label="Move photo left"
+                                disabled={index === 0 || reorderPhotos.isPending}
+                                onClick={() => movePhoto(index, -1)}
+                                className="rounded p-1 disabled:opacity-30"
+                              >
+                                <ArrowLeft size={12} />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label="Set as album cover"
+                                disabled={isCover || setCover.isPending}
+                                onClick={() => setCover.mutate({ albumId: album.id, url: photo.url })}
+                                className="rounded p-1 disabled:opacity-30"
+                              >
+                                <Star size={12} className={isCover ? "fill-current text-accent" : ""} />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label="Move photo right"
+                                disabled={index === activePhotos.length - 1 || reorderPhotos.isPending}
+                                onClick={() => movePhoto(index, 1)}
+                                className="rounded p-1 disabled:opacity-30"
+                              >
+                                <ArrowRight size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </CardContent>
