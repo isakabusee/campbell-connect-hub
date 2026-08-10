@@ -571,6 +571,7 @@ function GalleryAdmin({ userId }: { userId: string }) {
   const [photoFiles, setPhotoFiles] = useState<FileList | null>(null);
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [newAlbumFiles, setNewAlbumFiles] = useState<File[]>([]);
 
   const { data: albums } = useQuery({
     queryKey: ["admin-albums"],
@@ -586,17 +587,34 @@ function GalleryAdmin({ userId }: { userId: string }) {
 
   const createAlbum = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("albums").insert({
+      const { data: album, error } = await supabase.from("albums").insert({
         title: albumTitle,
         description: albumDesc || null,
         event_date: albumDate || null,
         author_id: userId,
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      if (newAlbumFiles.length > 0 && album) {
+        const uploaded = await Promise.all(
+          newAlbumFiles.map(async (file, i) => {
+            const compressed = await compressIfImage(file);
+            const ext = file.name.split(".").pop();
+            const path = `${album.id}/${crypto.randomUUID()}.${ext}`;
+            const { error: uploadError } = await supabase.storage.from("gallery").upload(path, compressed);
+            if (uploadError) throw uploadError;
+            const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(path);
+            return { album_id: album.id, url: urlData.publicUrl, caption: null, sort_order: i };
+          }),
+        );
+        const { error: insertError } = await supabase.from("photos").insert(uploaded);
+        if (insertError) throw insertError;
+        await supabase.from("albums").update({ cover_url: uploaded[0].url }).eq("id", album.id);
+      }
     },
     onSuccess: () => {
       toast.success("Album created!");
-      setAlbumTitle(""); setAlbumDesc(""); setAlbumDate("");
+      setAlbumTitle(""); setAlbumDesc(""); setAlbumDate(""); setNewAlbumFiles([]);
       qc.invalidateQueries({ queryKey: ["admin-albums"] });
       qc.invalidateQueries({ queryKey: ["albums"] });
     },
@@ -669,9 +687,42 @@ function GalleryAdmin({ userId }: { userId: string }) {
             <div><Label className="font-body">Event Date (optional)</Label><Input type="date" value={albumDate} onChange={(e) => setAlbumDate(e.target.value)} /></div>
           </div>
           <div><Label className="font-body">Description (optional)</Label><Textarea rows={2} value={albumDesc} onChange={(e) => setAlbumDesc(e.target.value)} /></div>
+          <div>
+            <Label className="font-body">Photos (optional)</Label>
+            <Input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => setNewAlbumFiles(Array.from(e.target.files ?? []))}
+            />
+            {newAlbumFiles.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {newAlbumFiles.map((file, i) => (
+                  <div key={`${file.name}-${i}`} className="relative">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={file.name}
+                      className="h-20 w-20 rounded-md object-cover ring-1 ring-border"
+                    />
+                    <button
+                      type="button"
+                      aria-label={`Remove ${file.name}`}
+                      onClick={() => setNewAlbumFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                      className="absolute -right-1 -top-1 rounded-full bg-destructive p-0.5 text-destructive-foreground"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))}
+                <p className="w-full font-body text-xs text-muted-foreground">
+                  First photo will be used as the album cover.
+                </p>
+              </div>
+            )}
+          </div>
           <Button onClick={() => createAlbum.mutate()} disabled={!albumTitle || createAlbum.isPending} className="font-body">
             <Plus size={16} className="mr-2" />
-            {createAlbum.isPending ? "Creating…" : "Create Album"}
+            {createAlbum.isPending ? "Creating…" : newAlbumFiles.length > 0 ? `Create Album (${newAlbumFiles.length} photos)` : "Create Album"}
           </Button>
         </CardContent>
       </Card>
