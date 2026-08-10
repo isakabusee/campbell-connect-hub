@@ -181,7 +181,7 @@ const GalleryPage = () => {
                 </div>
               )}
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {albums?.map((album) => {
+                {albums?.map((album, albumIdx) => {
                   const photoCount = album.photos?.length ?? 0;
                   const cover = album.cover_url || (album.photos as any)?.[0]?.url;
                   return (
@@ -192,11 +192,12 @@ const GalleryPage = () => {
                     >
                       <div className="relative aspect-[4/3] overflow-hidden bg-primary/5">
                         {cover ? (
-                          <img
+                          <LazyImage
                             src={cover}
                             alt={album.title}
+                            eager={albumIdx < 3}
+                            wrapperClassName="absolute inset-0 h-full w-full"
                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            loading="lazy"
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center">
