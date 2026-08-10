@@ -1,9 +1,11 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
+import AnnouncementsList from "@/components/AnnouncementsList";
+import BulletinsList from "@/components/BulletinsList";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Church, BookOpen, Heart, ArrowRight } from "lucide-react";
+import { Church, BookOpen, Heart } from "lucide-react";
 
 const Index = () => {
   return (
@@ -24,9 +26,7 @@ const Index = () => {
                 resurrection.
               </p>
               <Button asChild variant="outline" className="mt-6 font-body">
-                <Link to="/about">
-                  Learn More About Us <ArrowRight size={16} className="ml-1" />
-                </Link>
+                <Link to="/about">Learn More About Us</Link>
               </Button>
             </div>
           </div>
@@ -48,6 +48,22 @@ const Index = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Announcements preview */}
+        <section className="py-16">
+          <div className="container">
+            <h2 className="mb-8 font-display text-3xl font-bold">Announcements</h2>
+            <AnnouncementsList limit={3} />
+          </div>
+        </section>
+
+        {/* Bulletins preview */}
+        <section className="bg-secondary py-16">
+          <div className="container">
+            <h2 className="mb-8 font-display text-3xl font-bold">Church Bulletins</h2>
+            <BulletinsList limit={2} />
           </div>
         </section>
       </main>
