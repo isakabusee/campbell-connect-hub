@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { FileText, Image as ImageIcon, Download, FileType2, File } from "lucide-react";
+import { FileText, FileArchive, FileSpreadsheet, FileImage, Presentation, FileType2, File } from "lucide-react";
 
-const IMAGE_RE = /\.(png|jpe?g|webp|gif|svg)$/i;
+const IMAGE_RE = /\.(png|jpe?g|webp|gif|svg|bmp|heic|tiff?)$/i;
 const PDF_RE = /\.pdf$/i;
 
 /** Extract a readable filename from a storage URL. */
@@ -17,15 +17,17 @@ function fileNameFromUrl(url: string): string {
   }
 }
 
-type DocKind = "pdf" | "doc" | "sheet" | "slides" | "archive" | "file";
+type DocKind = "pdf" | "doc" | "sheet" | "slides" | "archive" | "image" | "code" | "file";
 
 function docKindFromName(name: string): DocKind {
   const lower = name.toLowerCase();
   if (PDF_RE.test(lower)) return "pdf";
-  if (/\.(docx?|rtf|odt|pages)$/i.test(lower)) return "doc";
-  if (/\.(xlsx?|csv|ods)$/i.test(lower)) return "sheet";
+  if (/\.(docx?|rtf|odt|pages|txt)$/i.test(lower)) return "doc";
+  if (/\.(xlsx?|csv|ods|numbers)$/i.test(lower)) return "sheet";
   if (/\.(pptx?|odp|key)$/i.test(lower)) return "slides";
-  if (/\.(zip|rar|7z|tar|gz)$/i.test(lower)) return "archive";
+  if (/\.(zip|rar|7z|tar|gz|tgz|bz2|xz)$/i.test(lower)) return "archive";
+  if (/\.(png|jpe?g|webp|gif|svg|bmp|heic|tiff?)$/i.test(lower)) return "image";
+  if (/\.(js|jsx?|tsx?|json|html?|css|py|sh|xml|ya?ml|md)$/i.test(lower)) return "code";
   return "file";
 }
 
@@ -36,7 +38,22 @@ function labelForKind(kind: DocKind): string {
     case "sheet": return "Spreadsheet";
     case "slides": return "Slides";
     case "archive": return "Archive";
+    case "image": return "Image";
+    case "code": return "Code";
     default: return "File";
+  }
+}
+
+function iconForKind(kind: DocKind) {
+  switch (kind) {
+    case "pdf": return FileText;
+    case "doc": return FileType2;
+    case "sheet": return FileSpreadsheet;
+    case "slides": return Presentation;
+    case "archive": return FileArchive;
+    case "image": return FileImage;
+    case "code": return FileText;
+    default: return File;
   }
 }
 
@@ -117,15 +134,10 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
                                 download={kind === "file" ? undefined : name}
                                 className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary/50 px-3 py-1.5 text-xs font-body text-foreground transition hover:border-accent hover:text-accent"
                               >
-                                {kind === "pdf" ? (
-                                  <FileText size={14} className="shrink-0" />
-                                ) : kind === "archive" ? (
-                                  <Download size={14} className="shrink-0" />
-                                ) : kind === "sheet" || kind === "slides" ? (
-                                  <FileType2 size={14} className="shrink-0" />
-                                ) : (
-                                  <File size={14} className="shrink-0" />
-                                )}
+                              {(() => {
+                                const Icon = iconForKind(kind);
+                                return <Icon size={14} className="shrink-0" />;
+                              })()}
                                 <span className="font-semibold uppercase tracking-wide">{labelForKind(kind)}</span>
                                 <span className="hidden sm:inline text-muted-foreground">·</span>
                                 <span className="hidden sm:inline max-w-[12rem] truncate text-muted-foreground">{name}</span>
