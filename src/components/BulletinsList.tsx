@@ -300,11 +300,16 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
                 {b.file_urls && b.file_urls.length > 0 && (
                   <div className="mt-3 space-y-3">
                     {imageUrls.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
+                      <ul className="flex flex-wrap gap-2 list-none p-0 m-0">
                         {imageUrls.map((url, i) => (
-                          <ImageAttachment key={`img-${i}`} url={url} alt={`${b.title} attachment ${i + 1}`} />
+                          <li key={`img-${i}`}>
+                            <ImageAttachment
+                              url={url}
+                              alt={`${b.title} attachment image ${i + 1}`}
+                            />
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     )}
                     {docUrls.length > 0 && (
                       <ul className="flex flex-wrap gap-2">
