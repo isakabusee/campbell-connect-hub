@@ -94,9 +94,11 @@ const GalleryPage = () => {
               ) : (
                 <div className="columns-2 gap-4 sm:columns-3 lg:columns-4">
                   {sortedPhotos.map((photo: any, idx: number) => (
-                    <div
+                    <button
+                      type="button"
                       key={photo.id}
-                      className="mb-4 cursor-pointer overflow-hidden rounded-lg break-inside-avoid group"
+                      aria-label={`View photo ${idx + 1} of ${sortedPhotos.length}`}
+                      className="group mb-4 block w-full cursor-pointer break-inside-avoid overflow-hidden rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       onClick={() => openLightbox(sortedPhotos, idx)}
                     >
                       <img
@@ -108,7 +110,7 @@ const GalleryPage = () => {
                       {photo.caption && (
                         <p className="mt-1 font-body text-xs text-muted-foreground">{photo.caption}</p>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
