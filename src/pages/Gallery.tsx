@@ -3,9 +3,51 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+
+/** Image that fades in once decoded, showing a skeleton placeholder until then. */
+const LazyImage = ({
+  src,
+  alt,
+  className = "",
+  wrapperClassName = "",
+  eager = false,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  wrapperClassName?: string;
+  eager?: boolean;
+}) => {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <div className={`relative overflow-hidden bg-muted ${wrapperClassName}`}>
+      {!loaded && !failed && <Skeleton className="absolute inset-0 h-full w-full rounded-none" />}
+      {failed ? (
+        <div className="flex h-full min-h-[8rem] w-full items-center justify-center">
+          <Camera size={28} className="text-muted-foreground/40" aria-hidden="true" />
+          <span className="sr-only">Image unavailable</span>
+        </div>
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          fetchPriority={eager ? "high" : "low"}
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+          className={`${className} transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        />
+      )}
+    </div>
+  );
+};
 
 const GalleryPage = () => {
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
