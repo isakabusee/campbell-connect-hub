@@ -17,15 +17,17 @@ function fileNameFromUrl(url: string): string {
   }
 }
 
-type DocKind = "pdf" | "doc" | "sheet" | "slides" | "archive" | "file";
+type DocKind = "pdf" | "doc" | "sheet" | "slides" | "archive" | "image" | "code" | "file";
 
 function docKindFromName(name: string): DocKind {
   const lower = name.toLowerCase();
   if (PDF_RE.test(lower)) return "pdf";
-  if (/\.(docx?|rtf|odt|pages)$/i.test(lower)) return "doc";
-  if (/\.(xlsx?|csv|ods)$/i.test(lower)) return "sheet";
+  if (/\.(docx?|rtf|odt|pages|txt)$/i.test(lower)) return "doc";
+  if (/\.(xlsx?|csv|ods|numbers)$/i.test(lower)) return "sheet";
   if (/\.(pptx?|odp|key)$/i.test(lower)) return "slides";
-  if (/\.(zip|rar|7z|tar|gz)$/i.test(lower)) return "archive";
+  if (/\.(zip|rar|7z|tar|gz|tgz|bz2|xz)$/i.test(lower)) return "archive";
+  if (/\.(png|jpe?g|webp|gif|svg|bmp|heic|tiff?)$/i.test(lower)) return "image";
+  if (/\.(js|jsx?|tsx?|json|html?|css|py|sh|xml|ya?ml|md)$/i.test(lower)) return "code";
   return "file";
 }
 
@@ -36,7 +38,22 @@ function labelForKind(kind: DocKind): string {
     case "sheet": return "Spreadsheet";
     case "slides": return "Slides";
     case "archive": return "Archive";
+    case "image": return "Image";
+    case "code": return "Code";
     default: return "File";
+  }
+}
+
+function iconForKind(kind: DocKind) {
+  switch (kind) {
+    case "pdf": return FileText;
+    case "doc": return FileType2;
+    case "sheet": return FileSpreadsheet;
+    case "slides": return Presentation;
+    case "archive": return FileArchive;
+    case "image": return FileImage;
+    case "code": return FileText;
+    default: return File;
   }
 }
 
