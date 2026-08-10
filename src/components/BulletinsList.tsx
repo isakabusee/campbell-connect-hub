@@ -59,7 +59,7 @@ function labelForKind(kind: DocKind): string {
   }
 }
 
-function iconForKind(kind: DocKind): ComponentType<{ size?: number; className?: string }> {
+function iconForKind(kind: DocKind): LucideIcon {
   switch (kind) {
     case "pdf": return FileText;
     case "doc": return FileType2;
