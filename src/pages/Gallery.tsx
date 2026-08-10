@@ -155,11 +155,12 @@ const GalleryPage = () => {
                       className="group mb-4 block w-full cursor-pointer break-inside-avoid overflow-hidden rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       onClick={() => openLightbox(sortedPhotos, idx)}
                     >
-                      <img
+                      <LazyImage
                         src={photo.url}
                         alt={photo.caption || "Church photo"}
+                        eager={idx < 4}
+                        wrapperClassName="min-h-[8rem] rounded-lg"
                         className="w-full rounded-lg transition-transform duration-300 group-hover:scale-105"
-                        loading="lazy"
                       />
                       {photo.caption && (
                         <p className="mt-1 font-body text-xs text-muted-foreground">{photo.caption}</p>
