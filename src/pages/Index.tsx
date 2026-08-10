@@ -1,8 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
-import AnnouncementsList from "@/components/AnnouncementsList";
-import BulletinsList from "@/components/BulletinsList";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Church, BookOpen, Heart, ArrowRight } from "lucide-react";
@@ -50,36 +48,6 @@ const Index = () => {
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* Announcements preview */}
-        <section className="py-16">
-          <div className="container">
-            <div className="mb-8 flex items-end justify-between">
-              <h2 className="font-display text-3xl font-bold">Announcements</h2>
-              <Button asChild variant="ghost" className="font-body text-accent">
-                <Link to="/announcements">
-                  View All <ArrowRight size={16} className="ml-1" />
-                </Link>
-              </Button>
-            </div>
-            <AnnouncementsList limit={3} />
-          </div>
-        </section>
-
-        {/* Bulletins preview */}
-        <section className="bg-secondary py-16">
-          <div className="container">
-            <div className="mb-8 flex items-end justify-between">
-              <h2 className="font-display text-3xl font-bold">Church Bulletins</h2>
-              <Button asChild variant="ghost" className="font-body text-accent">
-                <Link to="/bulletins">
-                  View All <ArrowRight size={16} className="ml-1" />
-                </Link>
-              </Button>
-            </div>
-            <BulletinsList limit={2} />
           </div>
         </section>
       </main>
