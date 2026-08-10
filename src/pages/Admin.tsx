@@ -637,6 +637,7 @@ function GalleryAdmin({ userId }: { userId: string }) {
     mutationFn: async () => {
       if (!photoFiles || !selectedAlbumId) return;
       setUploading(true);
+      const offset = ((albums?.find((a) => a.id === selectedAlbumId)?.photos as any[]) ?? []).length;
       for (let i = 0; i < photoFiles.length; i++) {
         const file = photoFiles[i];
         const ext = file.name.split(".").pop();
@@ -648,7 +649,7 @@ function GalleryAdmin({ userId }: { userId: string }) {
           album_id: selectedAlbumId,
           url: urlData.publicUrl,
           caption: caption || null,
-          sort_order: i,
+          sort_order: offset + i,
         });
         if (insertError) throw insertError;
       }
