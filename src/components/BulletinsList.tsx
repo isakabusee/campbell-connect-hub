@@ -200,11 +200,15 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
 function ImageAttachment({ url, alt }: { url: string; alt: string }) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
   const name = fileNameFromUrl(url);
+  const downloadLabel = `Download image ${name}`;
 
   if (status === "error") {
     return (
-      <div className="flex h-32 w-44 flex-col items-center justify-center gap-1 rounded-md border border-destructive/30 bg-secondary/50 p-3 text-center">
-        <AlertTriangle size={18} className="shrink-0 text-destructive" />
+      <div
+        className="flex h-32 w-44 flex-col items-center justify-center gap-1 rounded-md border border-destructive/30 bg-secondary/50 p-3 text-center"
+        role="alert"
+      >
+        <AlertTriangle size={18} className="shrink-0 text-destructive" aria-hidden="true" />
         <span className="font-body text-xs text-destructive font-semibold">Image unavailable</span>
         <span className="font-body text-[11px] text-muted-foreground line-clamp-1">{name}</span>
         <a
@@ -212,9 +216,10 @@ function ImageAttachment({ url, alt }: { url: string; alt: string }) {
           target="_blank"
           rel="noopener noreferrer"
           download={name}
-          className="mt-1 inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
+          aria-label={`Try opening image ${name} directly in a new tab`}
+          className="mt-1 inline-flex items-center gap-1 text-[11px] text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
         >
-          <ExternalLink size={11} /> Try opening directly
+          <ExternalLink size={11} aria-hidden="true" /> Try opening directly
         </a>
       </div>
     );
@@ -226,12 +231,16 @@ function ImageAttachment({ url, alt }: { url: string; alt: string }) {
       target="_blank"
       rel="noopener noreferrer"
       download={name}
+      aria-label={downloadLabel}
       title="Click to download"
-      className="relative block h-32 w-auto shrink-0"
+      className="relative block h-32 w-auto shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
     >
       {status === "loading" && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-md bg-secondary/60">
-          <Loader2 size={20} className="animate-spin text-muted-foreground" />
+        <div
+          className="absolute inset-0 flex items-center justify-center rounded-md bg-secondary/60"
+          aria-hidden="true"
+        >
+          <Loader2 size={20} className="animate-spin text-muted-foreground" aria-hidden="true" />
         </div>
       )}
       <img
