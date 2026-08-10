@@ -73,8 +73,8 @@ function iconForKind(kind: DocKind): LucideIcon {
 }
 
 /** Downloads a file as a blob to verify it loads and to force a download. */
-async function triggerBlobDownload(url: string, name: string) {
-  const res = await fetch(url);
+async function triggerBlobDownload(url: string, name: string, signal?: AbortSignal) {
+  const res = await fetch(url, { signal });
   if (!res.ok) throw new Error(`Request failed (${res.status})`);
   const blob = await res.blob();
   const blobUrl = URL.createObjectURL(blob);
@@ -92,6 +92,8 @@ async function triggerBlobDownload(url: string, name: string) {
 /**
  * Document attachment chip with loading, retry, and error states.
  * On error, retries the fetch; offers a fallback to open in a new tab.
+ * Guards against repeated clicks while a download is in flight and cancels
+ * any previous in-flight request when a new one is started (e.g. on retry).
  */
 function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
   const [state, setState] = useState<DownloadState>("idle");
@@ -99,22 +101,68 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
   const Icon = iconForKind(kind);
   const kindLabel = labelForKind(kind);
 
-  const handleDownload = async (e: MouseEvent) => {
-    e.preventDefault();
-    if (state === "loading") return;
+  // Ref holding the AbortController for the currently in-flight request, if any.
+  // Using a ref (not state) avoids re-renders and survives rapid click events.
+  const controllerRef = useRef<AbortController | null>(null);
+  // Ref flag to synchronously guard against double-clicks before the state
+  // update (disabled) has a chance to apply.
+  const inFlightRef = useRef(false);
+
+  const startDownload = async () => {
+    // Cancel any previous in-flight request so its stale response can't land.
+    if (controllerRef.current) {
+      controllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
     setState("loading");
     try {
-      await triggerBlobDownload(url, name);
+      await triggerBlobDownload(url, name, controller.signal);
       setState("idle");
       toast.success("Download started", { description: name });
     } catch (err) {
+      // Ignore aborts triggered by our own retry / unmount guard.
+      if (controller.signal.aborted) return;
       console.error("Bulletin download failed:", err);
       setState("error");
       toast.error("Couldn't download file", {
         description: "Please check your connection and try again.",
       });
+    } finally {
+      // Only clear our controller if it is still the active one (a newer
+      // request may already have replaced it).
+      if (controllerRef.current === controller) {
+        controllerRef.current = null;
+      }
+      inFlightRef.current = false;
     }
   };
+
+  const handleDownload = async (e: MouseEvent) => {
+    e.preventDefault();
+    // Guard against repeated clicks while a download is already running.
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    startDownload();
+  };
+
+  const handleRetry = async (e: MouseEvent) => {
+    e.preventDefault();
+    // Retry always cancels the previous request (if any) and starts fresh.
+    startDownload();
+    inFlightRef.current = true;
+  };
+
+  // Abort any in-flight request when the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+        controllerRef.current = null;
+      }
+    };
+  }, []);
 
   const handleKey = (e: KeyboardEvent) => {
     // Allow Space and Enter to trigger the download (button handles this natively,
