@@ -30,15 +30,12 @@ const ContactPage = () => {
 
   const onSubmit = async (values: FormValues) => {
     setSubmitting(true);
-    const { error } = await supabase.from("contact_messages").insert([{
-      name: values.name,
-      email: values.email,
-      subject: values.subject,
-      message: values.message,
-    }]);
+    const { data, error } = await supabase.functions.invoke("submit-contact-message", {
+      body: { ...values, website: "" },
+    });
     setSubmitting(false);
-    if (error) {
-      toast.error("Failed to send message. Please try again.");
+    if (error || !data?.ok) {
+      toast.error("Failed to send message. Please check your details and try again.");
     } else {
       toast.success("Message sent! We'll be in touch soon.");
       form.reset();
@@ -123,6 +120,15 @@ const ContactPage = () => {
                       <FormMessage />
                     </FormItem>
                   )} />
+                  {/* Honeypot: hidden from users, filled only by bots */}
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    className="hidden"
+                  />
                   <Button type="submit" disabled={submitting} className="w-full font-body">
                     {submitting ? "Sending..." : "Send Message"}
                   </Button>
