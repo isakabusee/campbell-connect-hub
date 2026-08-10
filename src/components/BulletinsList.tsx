@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { FileText, FileArchive, FileSpreadsheet, FileImage, Presentation, FileType2, File, Download } from "lucide-react";
+import { FileText, FileArchive, FileSpreadsheet, FileImage, Presentation, FileType2, File } from "lucide-react";
 
 const IMAGE_RE = /\.(png|jpe?g|webp|gif|svg|bmp|heic|tiff?)$/i;
 const PDF_RE = /\.pdf$/i;
