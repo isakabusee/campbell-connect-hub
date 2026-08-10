@@ -49,12 +49,26 @@ const Directory = () => {
     enabled: !!user,
   });
 
+  const { data: myContact, refetch: refetchContact } = useQuery({
+    queryKey: ["my-contact"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profile_contacts")
+        .select("phone")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const startEditing = () => {
     if (myProfile) {
       setDisplayName(myProfile.display_name);
-      setPhone(myProfile.phone || "");
       setBio(myProfile.bio || "");
     }
+    setPhone(myContact?.phone || "");
     setEditing(true);
   };
 
@@ -62,15 +76,23 @@ const Directory = () => {
     if (!user) return;
     const { error } = await supabase
       .from("profiles")
-      .update({ display_name: displayName, phone, bio })
+      .update({ display_name: displayName, bio })
       .eq("user_id", user.id);
     if (error) {
       toast.error("Failed to update profile");
       return;
     }
+    const { error: contactError } = await supabase
+      .from("profile_contacts")
+      .upsert({ user_id: user.id, phone }, { onConflict: "user_id" });
+    if (contactError) {
+      toast.error("Failed to update phone number");
+      return;
+    }
     toast.success("Profile updated!");
     setEditing(false);
     refetchMe();
+    refetchContact();
     refetch();
   };
 
@@ -145,9 +167,9 @@ const Directory = () => {
                       <div>
                         <p className="font-display font-semibold">{myProfile.display_name}</p>
                         {myProfile.bio && <p className="text-sm text-muted-foreground font-body">{myProfile.bio}</p>}
-                        {myProfile.phone && (
+                        {myContact?.phone && (
                           <p className="text-xs text-muted-foreground font-body flex items-center gap-1 mt-1">
-                            <Phone size={12} /> {myProfile.phone}
+                            <Phone size={12} /> {myContact.phone}
                           </p>
                         )}
                       </div>
