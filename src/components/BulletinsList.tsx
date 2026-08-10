@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from "react";
+import { useState, type MouseEvent, type KeyboardEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
