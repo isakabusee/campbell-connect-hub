@@ -181,7 +181,7 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
       <span className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={handleDownload}
+          onClick={handleRetry}
           aria-label={`Retry download of ${kindLabel.toLowerCase()} ${name}`}
           className={`${baseClass} border-destructive/40 bg-destructive/10 text-destructive hover:border-destructive`}
           title="Tap to retry the download"
