@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const GalleryPage = () => {
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
@@ -28,15 +28,30 @@ const GalleryPage = () => {
   const sortedPhotos = activeAlbum?.photos?.sort((a: any, b: any) => a.sort_order - b.sort_order) ?? [];
 
   const openLightbox = (photos: any[], index: number) => setLightbox({ photos, index });
-  const closeLightbox = () => setLightbox(null);
-  const prevPhoto = () => {
+  const closeLightbox = useCallback(() => setLightbox(null), []);
+  const prevPhoto = useCallback(() => {
+    setLightbox((lb) => (lb ? { ...lb, index: (lb.index - 1 + lb.photos.length) % lb.photos.length } : lb));
+  }, []);
+  const nextPhoto = useCallback(() => {
+    setLightbox((lb) => (lb ? { ...lb, index: (lb.index + 1) % lb.photos.length } : lb));
+  }, []);
+
+  // Keyboard navigation + scroll lock while the lightbox is open
+  useEffect(() => {
     if (!lightbox) return;
-    setLightbox({ ...lightbox, index: (lightbox.index - 1 + lightbox.photos.length) % lightbox.photos.length });
-  };
-  const nextPhoto = () => {
-    if (!lightbox) return;
-    setLightbox({ ...lightbox, index: (lightbox.index + 1) % lightbox.photos.length });
-  };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLightbox();
+      else if (e.key === "ArrowLeft") prevPhoto();
+      else if (e.key === "ArrowRight") nextPhoto();
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [lightbox, closeLightbox, prevPhoto, nextPhoto]);
 
   return (
     <div className="flex min-h-screen flex-col">
