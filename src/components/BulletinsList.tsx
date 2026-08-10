@@ -134,15 +134,10 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
                                 download={kind === "file" ? undefined : name}
                                 className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary/50 px-3 py-1.5 text-xs font-body text-foreground transition hover:border-accent hover:text-accent"
                               >
-                                {kind === "pdf" ? (
-                                  <FileText size={14} className="shrink-0" />
-                                ) : kind === "archive" ? (
-                                  <Download size={14} className="shrink-0" />
-                                ) : kind === "sheet" || kind === "slides" ? (
-                                  <FileType2 size={14} className="shrink-0" />
-                                ) : (
-                                  <File size={14} className="shrink-0" />
-                                )}
+                              {(() => {
+                                const Icon = iconForKind(kind);
+                                return <Icon size={14} className="shrink-0" />;
+                              })()}
                                 <span className="font-semibold uppercase tracking-wide">{labelForKind(kind)}</span>
                                 <span className="hidden sm:inline text-muted-foreground">·</span>
                                 <span className="hidden sm:inline max-w-[12rem] truncate text-muted-foreground">{name}</span>
