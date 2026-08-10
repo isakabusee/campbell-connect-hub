@@ -1,10 +1,27 @@
+import { useState, type MouseEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { FileText, FileArchive, FileSpreadsheet, FileImage, Presentation, FileType2, File } from "lucide-react";
+import { toast } from "sonner";
+import type { LucideIcon } from "lucide-react";
+import {
+  FileText,
+  FileArchive,
+  FileSpreadsheet,
+  FileImage,
+  Presentation,
+  FileType2,
+  File,
+  Loader2,
+  AlertTriangle,
+  ExternalLink,
+} from "lucide-react";
 
 const IMAGE_RE = /\.(png|jpe?g|webp|gif|svg|bmp|heic|tiff?)$/i;
 const PDF_RE = /\.pdf$/i;
+
+type DocKind = "pdf" | "doc" | "sheet" | "slides" | "archive" | "image" | "code" | "file";
+type DownloadState = "idle" | "loading" | "error";
 
 /** Extract a readable filename from a storage URL. */
 function fileNameFromUrl(url: string): string {
@@ -17,8 +34,6 @@ function fileNameFromUrl(url: string): string {
   }
 }
 
-type DocKind = "pdf" | "doc" | "sheet" | "slides" | "archive" | "image" | "code" | "file";
-
 function docKindFromName(name: string): DocKind {
   const lower = name.toLowerCase();
   if (PDF_RE.test(lower)) return "pdf";
@@ -26,7 +41,7 @@ function docKindFromName(name: string): DocKind {
   if (/\.(xlsx?|csv|ods|numbers)$/i.test(lower)) return "sheet";
   if (/\.(pptx?|odp|key)$/i.test(lower)) return "slides";
   if (/\.(zip|rar|7z|tar|gz|tgz|bz2|xz)$/i.test(lower)) return "archive";
-  if (/\.(png|jpe?g|webp|gif|svg|bmp|heic|tiff?)$/i.test(lower)) return "image";
+  if (IMAGE_RE.test(lower)) return "image";
   if (/\.(js|jsx?|tsx?|json|html?|css|py|sh|xml|ya?ml|md)$/i.test(lower)) return "code";
   return "file";
 }
@@ -44,7 +59,7 @@ function labelForKind(kind: DocKind): string {
   }
 }
 
-function iconForKind(kind: DocKind) {
+function iconForKind(kind: DocKind): LucideIcon {
   switch (kind) {
     case "pdf": return FileText;
     case "doc": return FileType2;
@@ -55,6 +70,158 @@ function iconForKind(kind: DocKind) {
     case "code": return FileText;
     default: return File;
   }
+}
+
+/** Downloads a file as a blob to verify it loads and to force a download. */
+async function triggerBlobDownload(url: string, name: string) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Request failed (${res.status})`);
+  const blob = await res.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = blobUrl;
+  a.download = name;
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // Revoke shortly after to ensure the download has started.
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+}
+
+/**
+ * Document attachment chip with loading, retry, and error states.
+ * On error, retries the fetch; offers a fallback to open in a new tab.
+ */
+function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
+  const [state, setState] = useState<DownloadState>("idle");
+  const name = fileNameFromUrl(url);
+  const Icon = iconForKind(kind);
+
+  const handleDownload = async (e: MouseEvent) => {
+    e.preventDefault();
+    if (state === "loading") return;
+    setState("loading");
+    try {
+      await triggerBlobDownload(url, name);
+      setState("idle");
+      toast.success("Download started", { description: name });
+    } catch (err) {
+      console.error("Bulletin download failed:", err);
+      setState("error");
+      toast.error("Couldn't download file", {
+        description: "Please check your connection and try again.",
+      });
+    }
+  };
+
+  const baseClass =
+    "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-body transition";
+
+  if (state === "error") {
+    return (
+      <span className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={handleDownload}
+          className={`${baseClass} border-destructive/40 bg-destructive/10 text-destructive hover:border-destructive`}
+          title="Tap to retry the download"
+        >
+          <AlertTriangle size={14} className="shrink-0" />
+          <span className="font-semibold">Download failed</span>
+          <span className="text-muted-foreground">· Retry</span>
+        </button>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-accent hover:underline"
+        >
+          Open in new tab instead
+        </a>
+      </span>
+    );
+  }
+
+  const loading = state === "loading";
+  return (
+    <button
+      onClick={handleDownload}
+      disabled={loading}
+      aria-busy={loading}
+      title={loading ? "Downloading…" : "Click to download"}
+      className={`${baseClass} ${
+        loading
+          ? "border-accent/40 bg-secondary text-accent cursor-progress"
+          : "border-border bg-secondary/50 text-foreground hover:border-accent hover:text-accent"
+      }`}
+    >
+      {loading ? (
+        <Loader2 size={14} className="shrink-0 animate-spin" />
+      ) : (
+        <Icon size={14} className="shrink-0" />
+      )}
+      <span className="font-semibold uppercase tracking-wide">{labelForKind(kind)}</span>
+      <span className="hidden sm:inline text-muted-foreground">·</span>
+      <span className="hidden sm:inline max-w-[12rem] truncate text-muted-foreground">
+        {loading ? "Downloading…" : name}
+      </span>
+    </button>
+  );
+}
+
+/**
+ * Image attachment with a lazy-load spinner and an error fallback that still
+ * offers a direct link / download retry.
+ */
+function ImageAttachment({ url, alt }: { url: string; alt: string }) {
+  const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
+  const name = fileNameFromUrl(url);
+
+  if (status === "error") {
+    return (
+      <div className="flex h-32 w-44 flex-col items-center justify-center gap-1 rounded-md border border-destructive/30 bg-secondary/50 p-3 text-center">
+        <AlertTriangle size={18} className="shrink-0 text-destructive" />
+        <span className="font-body text-xs text-destructive font-semibold">Image unavailable</span>
+        <span className="font-body text-[11px] text-muted-foreground line-clamp-1">{name}</span>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          download={name}
+          className="mt-1 inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
+        >
+          <ExternalLink size={11} /> Try opening directly
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      download={name}
+      title="Click to download"
+      className="relative block h-32 w-auto shrink-0"
+    >
+      {status === "loading" && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-md bg-secondary/60">
+          <Loader2 size={20} className="animate-spin text-muted-foreground" />
+        </div>
+      )}
+      <img
+        src={url}
+        alt={alt}
+        onLoad={() => setStatus("loaded")}
+        onError={() => setStatus("error")}
+        className={`h-32 w-auto rounded-md object-cover shadow-sm ring-1 ring-border transition ${
+          status === "loaded" ? "opacity-100 hover:ring-accent" : "opacity-0"
+        }`}
+        loading="lazy"
+      />
+    </a>
+  );
 }
 
 const BulletinsList = ({ limit }: { limit?: number }) => {
@@ -102,46 +269,17 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
                     {imageUrls.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {imageUrls.map((url, i) => (
-                          <a
-                            key={`img-${i}`}
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download={fileNameFromUrl(url)}
-                            title="Click to download"
-                          >
-                            <img
-                              src={url}
-                              alt={`${b.title} attachment ${i + 1}`}
-                              className="h-32 w-auto rounded-md object-cover shadow-sm ring-1 ring-border transition hover:ring-accent"
-                              loading="lazy"
-                            />
-                          </a>
+                          <ImageAttachment key={`img-${i}`} url={url} alt={`${b.title} attachment ${i + 1}`} />
                         ))}
                       </div>
                     )}
                     {docUrls.length > 0 && (
                       <ul className="flex flex-wrap gap-2">
                         {docUrls.map((url, i) => {
-                          const name = fileNameFromUrl(url);
-                          const kind = docKindFromName(name);
+                          const kind = docKindFromName(fileNameFromUrl(url));
                           return (
                             <li key={`doc-${i}`}>
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                download={kind === "file" ? undefined : name}
-                                className="inline-flex items-center gap-2 rounded-md border border-border bg-secondary/50 px-3 py-1.5 text-xs font-body text-foreground transition hover:border-accent hover:text-accent"
-                              >
-                              {(() => {
-                                const Icon = iconForKind(kind);
-                                return <Icon size={14} className="shrink-0" />;
-                              })()}
-                                <span className="font-semibold uppercase tracking-wide">{labelForKind(kind)}</span>
-                                <span className="hidden sm:inline text-muted-foreground">·</span>
-                                <span className="hidden sm:inline max-w-[12rem] truncate text-muted-foreground">{name}</span>
-                              </a>
+                              <AttachmentDownload url={url} kind={kind} />
                             </li>
                           );
                         })}
