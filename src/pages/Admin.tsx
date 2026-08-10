@@ -578,7 +578,7 @@ function GalleryAdmin({ userId }: { userId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("albums")
-        .select("*, photos(id, url, caption)")
+        .select("*, photos(id, url, caption, sort_order)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
