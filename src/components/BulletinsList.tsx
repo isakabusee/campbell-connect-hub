@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from "react";
+import { useState, type MouseEvent, type KeyboardEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -97,6 +97,7 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
   const [state, setState] = useState<DownloadState>("idle");
   const name = fileNameFromUrl(url);
   const Icon = iconForKind(kind);
+  const kindLabel = labelForKind(kind);
 
   const handleDownload = async (e: MouseEvent) => {
     e.preventDefault();
@@ -115,18 +116,29 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
     }
   };
 
+  const handleKey = (e: KeyboardEvent) => {
+    // Allow Space and Enter to trigger the download (button handles this natively,
+    // but ensure preventDefault on Space avoids page scroll on custom handlers).
+    if (e.key === " " || e.key === "Spacebar") {
+      e.preventDefault();
+      (e.currentTarget as HTMLElement).click();
+    }
+  };
+
   const baseClass =
-    "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-body transition";
+    "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-body transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
   if (state === "error") {
     return (
       <span className="flex flex-wrap items-center gap-2">
         <button
+          type="button"
           onClick={handleDownload}
+          aria-label={`Retry download of ${kindLabel.toLowerCase()} ${name}`}
           className={`${baseClass} border-destructive/40 bg-destructive/10 text-destructive hover:border-destructive`}
           title="Tap to retry the download"
         >
-          <AlertTriangle size={14} className="shrink-0" />
+          <AlertTriangle size={14} className="shrink-0" aria-hidden="true" />
           <span className="font-semibold">Download failed</span>
           <span className="text-muted-foreground">· Retry</span>
         </button>
@@ -134,7 +146,8 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-accent hover:underline"
+          aria-label={`Open ${kindLabel.toLowerCase()} ${name} in a new tab`}
+          className="text-xs text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
         >
           Open in new tab instead
         </a>
@@ -143,11 +156,17 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
   }
 
   const loading = state === "loading";
+  const accessibleLabel = loading
+    ? `Downloading ${kindLabel.toLowerCase()} ${name}, please wait`
+    : `Download ${kindLabel.toLowerCase()} ${name}`;
   return (
     <button
+      type="button"
       onClick={handleDownload}
+      onKeyDown={handleKey}
       disabled={loading}
       aria-busy={loading}
+      aria-label={accessibleLabel}
       title={loading ? "Downloading…" : "Click to download"}
       className={`${baseClass} ${
         loading
@@ -156,13 +175,18 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
       }`}
     >
       {loading ? (
-        <Loader2 size={14} className="shrink-0 animate-spin" />
+        <Loader2 size={14} className="shrink-0 animate-spin" aria-hidden="true" />
       ) : (
-        <Icon size={14} className="shrink-0" />
+        <Icon size={14} className="shrink-0" aria-hidden="true" />
       )}
-      <span className="font-semibold uppercase tracking-wide">{labelForKind(kind)}</span>
-      <span className="hidden sm:inline text-muted-foreground">·</span>
-      <span className="hidden sm:inline max-w-[12rem] truncate text-muted-foreground">
+      <span className="font-semibold uppercase tracking-wide" aria-hidden="true">
+        {kindLabel}
+      </span>
+      <span className="hidden sm:inline text-muted-foreground" aria-hidden="true">·</span>
+      <span
+        className="hidden sm:inline max-w-[12rem] truncate text-muted-foreground"
+        aria-hidden="true"
+      >
         {loading ? "Downloading…" : name}
       </span>
     </button>
@@ -176,11 +200,15 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
 function ImageAttachment({ url, alt }: { url: string; alt: string }) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
   const name = fileNameFromUrl(url);
+  const downloadLabel = `Download image ${name}`;
 
   if (status === "error") {
     return (
-      <div className="flex h-32 w-44 flex-col items-center justify-center gap-1 rounded-md border border-destructive/30 bg-secondary/50 p-3 text-center">
-        <AlertTriangle size={18} className="shrink-0 text-destructive" />
+      <div
+        className="flex h-32 w-44 flex-col items-center justify-center gap-1 rounded-md border border-destructive/30 bg-secondary/50 p-3 text-center"
+        role="alert"
+      >
+        <AlertTriangle size={18} className="shrink-0 text-destructive" aria-hidden="true" />
         <span className="font-body text-xs text-destructive font-semibold">Image unavailable</span>
         <span className="font-body text-[11px] text-muted-foreground line-clamp-1">{name}</span>
         <a
@@ -188,9 +216,10 @@ function ImageAttachment({ url, alt }: { url: string; alt: string }) {
           target="_blank"
           rel="noopener noreferrer"
           download={name}
-          className="mt-1 inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
+          aria-label={`Try opening image ${name} directly in a new tab`}
+          className="mt-1 inline-flex items-center gap-1 text-[11px] text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
         >
-          <ExternalLink size={11} /> Try opening directly
+          <ExternalLink size={11} aria-hidden="true" /> Try opening directly
         </a>
       </div>
     );
@@ -202,12 +231,16 @@ function ImageAttachment({ url, alt }: { url: string; alt: string }) {
       target="_blank"
       rel="noopener noreferrer"
       download={name}
+      aria-label={downloadLabel}
       title="Click to download"
-      className="relative block h-32 w-auto shrink-0"
+      className="relative block h-32 w-auto shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
     >
       {status === "loading" && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-md bg-secondary/60">
-          <Loader2 size={20} className="animate-spin text-muted-foreground" />
+        <div
+          className="absolute inset-0 flex items-center justify-center rounded-md bg-secondary/60"
+          aria-hidden="true"
+        >
+          <Loader2 size={20} className="animate-spin text-muted-foreground" aria-hidden="true" />
         </div>
       )}
       <img
@@ -267,11 +300,16 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
                 {b.file_urls && b.file_urls.length > 0 && (
                   <div className="mt-3 space-y-3">
                     {imageUrls.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
+                      <ul className="flex flex-wrap gap-2 list-none p-0 m-0">
                         {imageUrls.map((url, i) => (
-                          <ImageAttachment key={`img-${i}`} url={url} alt={`${b.title} attachment ${i + 1}`} />
+                          <li key={`img-${i}`}>
+                            <ImageAttachment
+                              url={url}
+                              alt={`${b.title} attachment image ${i + 1}`}
+                            />
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     )}
                     {docUrls.length > 0 && (
                       <ul className="flex flex-wrap gap-2">
