@@ -95,6 +95,20 @@ const GalleryPage = () => {
     };
   }, [lightbox, closeLightbox, prevPhoto, nextPhoto]);
 
+  // Prefetch the neighbouring photos so swiping/arrowing feels instant
+  useEffect(() => {
+    if (!lightbox) return;
+    const { photos, index } = lightbox;
+    [index + 1, index - 1].forEach((i) => {
+      const photo = photos[(i + photos.length) % photos.length];
+      if (photo?.url) {
+        const img = new Image();
+        img.decoding = "async";
+        img.src = photo.url;
+      }
+    });
+  }, [lightbox]);
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
