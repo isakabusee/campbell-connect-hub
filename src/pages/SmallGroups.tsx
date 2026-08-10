@@ -50,6 +50,7 @@ const SmallGroups = () => {
       });
       return counts;
     },
+    enabled: !!user,
   });
 
   const join = useMutation({
