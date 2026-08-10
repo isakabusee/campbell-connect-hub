@@ -5,8 +5,10 @@ import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Camera, X, ChevronLeft, ChevronRight, Link2, Check } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 
 /** Image that fades in once decoded, showing a skeleton placeholder until then. */
 const LazyImage = ({
@@ -50,8 +52,17 @@ const LazyImage = ({
 };
 
 const GalleryPage = () => {
-  const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
-  const [lightbox, setLightbox] = useState<{ photos: any[]; index: number } | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedAlbum = searchParams.get("album");
+  const photoParam = searchParams.get("photo");
+  const [copied, setCopied] = useState(false);
+
+  const setSelectedAlbum = useCallback(
+    (albumId: string | null) => {
+      setSearchParams(albumId ? { album: albumId } : {}, { replace: false });
+    },
+    [setSearchParams],
+  );
 
   const { data: albums, isLoading } = useQuery({
     queryKey: ["albums"],
@@ -69,13 +80,43 @@ const GalleryPage = () => {
   const activeAlbum = albums?.find((a) => a.id === selectedAlbum);
   const sortedPhotos = activeAlbum?.photos?.sort((a: any, b: any) => a.sort_order - b.sort_order) ?? [];
 
-  const openLightbox = (photos: any[], index: number) => setLightbox({ photos, index });
-  const closeLightbox = useCallback(() => setLightbox(null), []);
+  // The lightbox is fully described by the URL: ?album=<id>&photo=<id>
+  const lightboxIndex = photoParam ? sortedPhotos.findIndex((p: any) => p.id === photoParam) : -1;
+  const lightbox = useMemo(
+    () => (lightboxIndex >= 0 ? { photos: sortedPhotos, index: lightboxIndex } : null),
+    [lightboxIndex, sortedPhotos],
+  );
+
+  const goToPhoto = useCallback(
+    (photoId: string | null) => {
+      const next: Record<string, string> = {};
+      if (selectedAlbum) next.album = selectedAlbum;
+      if (photoId) next.photo = photoId;
+      setSearchParams(next, { replace: !photoId });
+    },
+    [selectedAlbum, setSearchParams],
+  );
+
+  const openLightbox = (_photos: any[], index: number) => goToPhoto(sortedPhotos[index]?.id ?? null);
+  const closeLightbox = useCallback(() => goToPhoto(null), [goToPhoto]);
   const prevPhoto = useCallback(() => {
-    setLightbox((lb) => (lb ? { ...lb, index: (lb.index - 1 + lb.photos.length) % lb.photos.length } : lb));
-  }, []);
+    if (lightboxIndex < 0 || !sortedPhotos.length) return;
+    goToPhoto(sortedPhotos[(lightboxIndex - 1 + sortedPhotos.length) % sortedPhotos.length].id);
+  }, [lightboxIndex, sortedPhotos, goToPhoto]);
   const nextPhoto = useCallback(() => {
-    setLightbox((lb) => (lb ? { ...lb, index: (lb.index + 1) % lb.photos.length } : lb));
+    if (lightboxIndex < 0 || !sortedPhotos.length) return;
+    goToPhoto(sortedPhotos[(lightboxIndex + 1) % sortedPhotos.length].id);
+  }, [lightboxIndex, sortedPhotos, goToPhoto]);
+
+  const copyLink = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      toast.success("Link copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy link");
+    }
   }, []);
 
   // Keyboard navigation + scroll lock while the lightbox is open
@@ -252,6 +293,14 @@ const GalleryPage = () => {
             className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
           >
             <X size={24} />
+          </button>
+          <button
+            type="button"
+            aria-label="Copy link to this photo"
+            onClick={(e) => { e.stopPropagation(); copyLink(); }}
+            className="absolute right-16 top-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+          >
+            {copied ? <Check size={24} aria-hidden="true" /> : <Link2 size={24} aria-hidden="true" />}
           </button>
           {lightbox.photos.length > 1 && (
             <>
