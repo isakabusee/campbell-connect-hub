@@ -116,7 +116,7 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
     }
   };
 
-  const handleKey = (e: React.KeyboardEvent) => {
+  const handleKey = (e: KeyboardEvent) => {
     // Allow Space and Enter to trigger the download (button handles this natively,
     // but ensure preventDefault on Space avoids page scroll on custom handlers).
     if (e.key === " " || e.key === "Spacebar") {
