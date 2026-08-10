@@ -260,9 +260,12 @@ const GalleryPage = () => {
             </>
           )}
           <div className="max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
-            <img
+            <LazyImage
+              key={lightbox.photos[lightbox.index].id}
               src={lightbox.photos[lightbox.index].url}
               alt={lightbox.photos[lightbox.index].caption || "Photo"}
+              eager
+              wrapperClassName="min-h-[12rem] rounded-lg bg-white/5"
               className="max-h-[85vh] max-w-full rounded-lg object-contain"
             />
             {lightbox.photos[lightbox.index].caption && (
