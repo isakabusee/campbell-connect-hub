@@ -97,6 +97,7 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
   const [state, setState] = useState<DownloadState>("idle");
   const name = fileNameFromUrl(url);
   const Icon = iconForKind(kind);
+  const kindLabel = labelForKind(kind);
 
   const handleDownload = async (e: MouseEvent) => {
     e.preventDefault();
@@ -115,18 +116,29 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
     }
   };
 
+  const handleKey = (e: React.KeyboardEvent) => {
+    // Allow Space and Enter to trigger the download (button handles this natively,
+    // but ensure preventDefault on Space avoids page scroll on custom handlers).
+    if (e.key === " " || e.key === "Spacebar") {
+      e.preventDefault();
+      (e.currentTarget as HTMLElement).click();
+    }
+  };
+
   const baseClass =
-    "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-body transition";
+    "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-body transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
   if (state === "error") {
     return (
       <span className="flex flex-wrap items-center gap-2">
         <button
+          type="button"
           onClick={handleDownload}
+          aria-label={`Retry download of ${kindLabel.toLowerCase()} ${name}`}
           className={`${baseClass} border-destructive/40 bg-destructive/10 text-destructive hover:border-destructive`}
           title="Tap to retry the download"
         >
-          <AlertTriangle size={14} className="shrink-0" />
+          <AlertTriangle size={14} className="shrink-0" aria-hidden="true" />
           <span className="font-semibold">Download failed</span>
           <span className="text-muted-foreground">· Retry</span>
         </button>
@@ -134,7 +146,8 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-accent hover:underline"
+          aria-label={`Open ${kindLabel.toLowerCase()} ${name} in a new tab`}
+          className="text-xs text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
         >
           Open in new tab instead
         </a>
@@ -143,11 +156,17 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
   }
 
   const loading = state === "loading";
+  const accessibleLabel = loading
+    ? `Downloading ${kindLabel.toLowerCase()} ${name}, please wait`
+    : `Download ${kindLabel.toLowerCase()} ${name}`;
   return (
     <button
+      type="button"
       onClick={handleDownload}
+      onKeyDown={handleKey}
       disabled={loading}
       aria-busy={loading}
+      aria-label={accessibleLabel}
       title={loading ? "Downloading…" : "Click to download"}
       className={`${baseClass} ${
         loading
@@ -156,13 +175,18 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
       }`}
     >
       {loading ? (
-        <Loader2 size={14} className="shrink-0 animate-spin" />
+        <Loader2 size={14} className="shrink-0 animate-spin" aria-hidden="true" />
       ) : (
-        <Icon size={14} className="shrink-0" />
+        <Icon size={14} className="shrink-0" aria-hidden="true" />
       )}
-      <span className="font-semibold uppercase tracking-wide">{labelForKind(kind)}</span>
-      <span className="hidden sm:inline text-muted-foreground">·</span>
-      <span className="hidden sm:inline max-w-[12rem] truncate text-muted-foreground">
+      <span className="font-semibold uppercase tracking-wide" aria-hidden="true">
+        {kindLabel}
+      </span>
+      <span className="hidden sm:inline text-muted-foreground" aria-hidden="true">·</span>
+      <span
+        className="hidden sm:inline max-w-[12rem] truncate text-muted-foreground"
+        aria-hidden="true"
+      >
         {loading ? "Downloading…" : name}
       </span>
     </button>
