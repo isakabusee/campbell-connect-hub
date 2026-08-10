@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const GalleryPage = () => {
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
@@ -28,15 +28,30 @@ const GalleryPage = () => {
   const sortedPhotos = activeAlbum?.photos?.sort((a: any, b: any) => a.sort_order - b.sort_order) ?? [];
 
   const openLightbox = (photos: any[], index: number) => setLightbox({ photos, index });
-  const closeLightbox = () => setLightbox(null);
-  const prevPhoto = () => {
+  const closeLightbox = useCallback(() => setLightbox(null), []);
+  const prevPhoto = useCallback(() => {
+    setLightbox((lb) => (lb ? { ...lb, index: (lb.index - 1 + lb.photos.length) % lb.photos.length } : lb));
+  }, []);
+  const nextPhoto = useCallback(() => {
+    setLightbox((lb) => (lb ? { ...lb, index: (lb.index + 1) % lb.photos.length } : lb));
+  }, []);
+
+  // Keyboard navigation + scroll lock while the lightbox is open
+  useEffect(() => {
     if (!lightbox) return;
-    setLightbox({ ...lightbox, index: (lightbox.index - 1 + lightbox.photos.length) % lightbox.photos.length });
-  };
-  const nextPhoto = () => {
-    if (!lightbox) return;
-    setLightbox({ ...lightbox, index: (lightbox.index + 1) % lightbox.photos.length });
-  };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLightbox();
+      else if (e.key === "ArrowLeft") prevPhoto();
+      else if (e.key === "ArrowRight") nextPhoto();
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [lightbox, closeLightbox, prevPhoto, nextPhoto]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -79,9 +94,11 @@ const GalleryPage = () => {
               ) : (
                 <div className="columns-2 gap-4 sm:columns-3 lg:columns-4">
                   {sortedPhotos.map((photo: any, idx: number) => (
-                    <div
+                    <button
+                      type="button"
                       key={photo.id}
-                      className="mb-4 cursor-pointer overflow-hidden rounded-lg break-inside-avoid group"
+                      aria-label={`View photo ${idx + 1} of ${sortedPhotos.length}`}
+                      className="group mb-4 block w-full cursor-pointer break-inside-avoid overflow-hidden rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       onClick={() => openLightbox(sortedPhotos, idx)}
                     >
                       <img
@@ -93,7 +110,7 @@ const GalleryPage = () => {
                       {photo.caption && (
                         <p className="mt-1 font-body text-xs text-muted-foreground">{photo.caption}</p>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -152,27 +169,40 @@ const GalleryPage = () => {
       {/* Lightbox */}
       {lightbox && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Photo viewer"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
           onClick={closeLightbox}
         >
           <button
+            type="button"
+            aria-label="Close photo viewer"
             onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
             className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
           >
             <X size={24} />
           </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); prevPhoto(); }}
-            className="absolute left-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
-          >
-            <ChevronLeft size={28} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); nextPhoto(); }}
-            className="absolute right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
-          >
-            <ChevronRight size={28} />
-          </button>
+          {lightbox.photos.length > 1 && (
+            <>
+              <button
+                type="button"
+                aria-label="Previous photo"
+                onClick={(e) => { e.stopPropagation(); prevPhoto(); }}
+                className="absolute left-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+              >
+                <ChevronLeft size={28} />
+              </button>
+              <button
+                type="button"
+                aria-label="Next photo"
+                onClick={(e) => { e.stopPropagation(); nextPhoto(); }}
+                className="absolute right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+              >
+                <ChevronRight size={28} />
+              </button>
+            </>
+          )}
           <div className="max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
             <img
               src={lightbox.photos[lightbox.index].url}
