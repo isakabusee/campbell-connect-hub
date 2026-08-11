@@ -1032,6 +1032,31 @@ function SmallGroupsAdmin() {
             </CardContent>
           </Card>
         ))}
+        {groupPageCount > 1 && (
+          <div className="flex items-center justify-center gap-4 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="font-body"
+              onClick={() => setGroupPage((p) => Math.max(0, p - 1))}
+              disabled={groupPage === 0 || groupsFetching}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground font-body">
+              Page {groupPage + 1} of {groupPageCount}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="font-body"
+              onClick={() => setGroupPage((p) => (p + 1 < groupPageCount ? p + 1 : p))}
+              disabled={groupPage + 1 >= groupPageCount || groupsFetching}
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
