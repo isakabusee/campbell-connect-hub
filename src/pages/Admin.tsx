@@ -938,7 +938,7 @@ function SmallGroupsAdmin() {
 
   const create = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("small_groups").insert({
+      const { data, error } = await supabase.from("small_groups").insert({
         name,
         description: description || null,
         meeting_day: meetingDay || null,
@@ -946,13 +946,20 @@ function SmallGroupsAdmin() {
         location: location || null,
         leader_name: leaderName || null,
         max_members: maxMembers ? parseInt(maxMembers) : null,
-      });
+      }).select("*").single();
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (created) => {
       toast.success("Small group created!");
       setName(""); setDescription(""); setMeetingDay(""); setMeetingTime(""); setLocation(""); setLeaderName(""); setMaxMembers("");
-      qc.invalidateQueries({ queryKey: ["admin-small-groups"] });
+      // Show the new group immediately instead of waiting for a refetch.
+      if (created) {
+        qc.setQueryData(["admin-small-groups"], (old: any[] | undefined) =>
+          [...(old ?? []), created].sort((a, b) => a.name.localeCompare(b.name)),
+        );
+      }
+      qc.invalidateQueries({ queryKey: ["admin-small-groups"], refetchType: "none" });
       qc.invalidateQueries({ queryKey: ["small-groups"] });
     },
     onError: () => toast.error("Failed to create group."),
@@ -963,8 +970,17 @@ function SmallGroupsAdmin() {
       const { error } = await supabase.from("small_groups").delete().eq("id", id);
       if (error) throw error;
     },
+    onMutate: async (id: string) => {
+      await qc.cancelQueries({ queryKey: ["admin-small-groups"] });
+      const previous = qc.getQueryData<any[]>(["admin-small-groups"]);
+      qc.setQueryData(["admin-small-groups"], (old: any[] | undefined) => (old ?? []).filter((g) => g.id !== id));
+      return { previous };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.previous) qc.setQueryData(["admin-small-groups"], ctx.previous);
+      toast.error("Failed to delete group.");
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-small-groups"] });
       qc.invalidateQueries({ queryKey: ["small-groups"] });
     },
   });
