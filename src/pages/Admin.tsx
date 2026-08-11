@@ -832,6 +832,17 @@ function GalleryAdmin({ userId }: { userId: string }) {
                     <ImagePlus size={16} className="mr-2" />
                     {uploading ? "Uploading…" : "Upload Photos"}
                   </Button>
+                  {uploading && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between font-body text-xs text-muted-foreground">
+                        <span>Uploading…</span>
+                        <span>{uploadProgress}%</span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div className="h-full bg-accent transition-all" style={{ width: `${uploadProgress}%` }} />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Existing photos grid */}
