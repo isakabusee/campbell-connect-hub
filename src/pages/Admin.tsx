@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { compressIfImage } from "@/lib/compressImage";
+import { compressIfImage, runPool } from "@/lib/compressImage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -572,6 +572,7 @@ function GalleryAdmin({ userId }: { userId: string }) {
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
   const [newAlbumFiles, setNewAlbumFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const { data: albums } = useQuery({
     queryKey: ["admin-albums"],
@@ -596,16 +597,23 @@ function GalleryAdmin({ userId }: { userId: string }) {
       if (error) throw error;
 
       if (newAlbumFiles.length > 0 && album) {
-        const uploaded = await Promise.all(
-          newAlbumFiles.map(async (file, i) => {
+        setUploading(true);
+        setUploadProgress(0);
+        const uploaded = await runPool(
+          newAlbumFiles,
+          4,
+          async (file, i) => {
             const compressed = await compressIfImage(file);
-            const ext = file.name.split(".").pop();
+            const ext = compressed.name.split(".").pop() || "webp";
             const path = `${album.id}/${crypto.randomUUID()}.${ext}`;
-            const { error: uploadError } = await supabase.storage.from("gallery").upload(path, compressed);
+            const { error: uploadError } = await supabase.storage
+              .from("gallery")
+              .upload(path, compressed, { cacheControl: "31536000", contentType: compressed.type });
             if (uploadError) throw uploadError;
             const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(path);
             return { album_id: album.id, url: urlData.publicUrl, caption: null, sort_order: i };
-          }),
+          },
+          (done, total) => setUploadProgress(Math.round((done / total) * 100)),
         );
         const { error: insertError } = await supabase.from("photos").insert(uploaded);
         if (insertError) throw insertError;
@@ -615,10 +623,11 @@ function GalleryAdmin({ userId }: { userId: string }) {
     onSuccess: () => {
       toast.success("Album created!");
       setAlbumTitle(""); setAlbumDesc(""); setAlbumDate(""); setNewAlbumFiles([]);
+      setUploading(false); setUploadProgress(0);
       qc.invalidateQueries({ queryKey: ["admin-albums"] });
       qc.invalidateQueries({ queryKey: ["albums"] });
     },
-    onError: (err: any) => toast.error(err?.message || "Failed to create album."),
+    onError: (err: any) => { toast.error(err?.message || "Failed to create album."); setUploading(false); setUploadProgress(0); },
   });
 
   const deleteAlbum = useMutation({
@@ -637,31 +646,42 @@ function GalleryAdmin({ userId }: { userId: string }) {
     mutationFn: async () => {
       if (!photoFiles || !selectedAlbumId) return;
       setUploading(true);
-      const offset = ((albums?.find((a) => a.id === selectedAlbumId)?.photos as any[]) ?? []).length;
-      for (let i = 0; i < photoFiles.length; i++) {
-        const file = photoFiles[i];
-        const ext = file.name.split(".").pop();
-        const path = `${selectedAlbumId}/${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from("gallery").upload(path, file);
-        if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(path);
-        const { error: insertError } = await supabase.from("photos").insert({
-          album_id: selectedAlbumId,
-          url: urlData.publicUrl,
-          caption: caption || null,
-          sort_order: offset + i,
-        });
-        if (insertError) throw insertError;
-      }
+      setUploadProgress(0);
+      const albumId = selectedAlbumId;
+      const offset = ((albums?.find((a) => a.id === albumId)?.photos as any[]) ?? []).length;
+      const files = Array.from(photoFiles);
+      const rows = await runPool(
+        files,
+        4,
+        async (file, i) => {
+          const compressed = await compressIfImage(file);
+          const ext = compressed.name.split(".").pop() || "webp";
+          const path = `${albumId}/${crypto.randomUUID()}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from("gallery")
+            .upload(path, compressed, { cacheControl: "31536000", contentType: compressed.type });
+          if (uploadError) throw uploadError;
+          const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(path);
+          return {
+            album_id: albumId,
+            url: urlData.publicUrl,
+            caption: caption || null,
+            sort_order: offset + i,
+          };
+        },
+        (done, total) => setUploadProgress(Math.round((done / total) * 100)),
+      );
+      const { error: insertError } = await supabase.from("photos").insert(rows);
+      if (insertError) throw insertError;
     },
     onSuccess: () => {
       toast.success("Photos uploaded!");
       setPhotoFiles(null); setCaption("");
-      setUploading(false);
+      setUploading(false); setUploadProgress(0);
       qc.invalidateQueries({ queryKey: ["admin-albums"] });
       qc.invalidateQueries({ queryKey: ["albums"] });
     },
-    onError: (err: any) => { toast.error(err?.message || "Failed to upload photos."); setUploading(false); },
+    onError: (err: any) => { toast.error(err?.message || "Failed to upload photos."); setUploading(false); setUploadProgress(0); },
   });
 
   const deletePhoto = useMutation({
@@ -812,6 +832,17 @@ function GalleryAdmin({ userId }: { userId: string }) {
                     <ImagePlus size={16} className="mr-2" />
                     {uploading ? "Uploading…" : "Upload Photos"}
                   </Button>
+                  {uploading && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between font-body text-xs text-muted-foreground">
+                        <span>Uploading…</span>
+                        <span>{uploadProgress}%</span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div className="h-full bg-accent transition-all" style={{ width: `${uploadProgress}%` }} />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Existing photos grid */}
