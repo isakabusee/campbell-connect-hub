@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
@@ -12,19 +13,28 @@ import { Users, MapPin, Clock, UserPlus, UserMinus } from "lucide-react";
 const SmallGroups = () => {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const PAGE_SIZE = 12;
+  const [page, setPage] = useState(0);
 
-  const { data: groups } = useQuery({
-    queryKey: ["small-groups"],
+  const { data: groupsPage, isFetching } = useQuery({
+    queryKey: ["small-groups", page],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const from = page * PAGE_SIZE;
+      const { data, error, count } = await supabase
         .from("small_groups")
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("published", true)
-        .order("name");
+        .order("name")
+        .range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
-      return data;
+      return { rows: data ?? [], total: count ?? 0 };
     },
+    placeholderData: keepPreviousData,
   });
+
+  const groups = groupsPage?.rows;
+  const total = groupsPage?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const { data: memberships } = useQuery({
     queryKey: ["my-group-memberships"],
@@ -97,7 +107,7 @@ const SmallGroups = () => {
             Join a small group to grow in faith and fellowship with others.
           </p>
 
-          {!groups?.length && (
+          {!groups?.length && !isFetching && (
             <p className="text-center text-muted-foreground font-body py-12">
               No small groups available yet. Check back soon!
             </p>
@@ -169,6 +179,32 @@ const SmallGroups = () => {
               );
             })}
           </div>
+
+          {pageCount > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-body"
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0 || isFetching}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground font-body">
+                Page {page + 1} of {pageCount}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-body"
+                onClick={() => setPage((p) => (p + 1 < pageCount ? p + 1 : p))}
+                disabled={page + 1 >= pageCount || isFetching}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       </main>
       <Footer />
