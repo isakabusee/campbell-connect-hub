@@ -107,7 +107,7 @@ const SmallGroups = () => {
             Join a small group to grow in faith and fellowship with others.
           </p>
 
-          {!groups?.length && (
+          {!groups?.length && !isFetching && (
             <p className="text-center text-muted-foreground font-body py-12">
               No small groups available yet. Check back soon!
             </p>
@@ -179,6 +179,32 @@ const SmallGroups = () => {
               );
             })}
           </div>
+
+          {pageCount > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-body"
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0 || isFetching}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground font-body">
+                Page {page + 1} of {pageCount}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-body"
+                onClick={() => setPage((p) => (p + 1 < pageCount ? p + 1 : p))}
+                disabled={page + 1 >= pageCount || isFetching}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       </main>
       <Footer />
