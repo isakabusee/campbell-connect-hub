@@ -572,6 +572,7 @@ function GalleryAdmin({ userId }: { userId: string }) {
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
   const [newAlbumFiles, setNewAlbumFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const { data: albums } = useQuery({
     queryKey: ["admin-albums"],
