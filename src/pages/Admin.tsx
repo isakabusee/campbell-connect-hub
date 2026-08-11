@@ -926,15 +926,26 @@ function SmallGroupsAdmin() {
   const [location, setLocation] = useState("");
   const [leaderName, setLeaderName] = useState("");
   const [maxMembers, setMaxMembers] = useState("");
+  const GROUPS_PAGE_SIZE = 10;
+  const [groupPage, setGroupPage] = useState(0);
 
-  const { data: groups } = useQuery({
-    queryKey: ["admin-small-groups"],
+  const { data: groupsPage, isFetching: groupsFetching } = useQuery({
+    queryKey: ["admin-small-groups", groupPage],
     queryFn: async () => {
-      const { data, error } = await supabase.from("small_groups").select("*").order("name");
+      const from = groupPage * GROUPS_PAGE_SIZE;
+      const { data, error, count } = await supabase
+        .from("small_groups")
+        .select("*", { count: "exact" })
+        .order("name")
+        .range(from, from + GROUPS_PAGE_SIZE - 1);
       if (error) throw error;
-      return data;
+      return { rows: data ?? [], total: count ?? 0 };
     },
+    placeholderData: keepPreviousData,
   });
+
+  const groups = groupsPage?.rows;
+  const groupPageCount = Math.max(1, Math.ceil((groupsPage?.total ?? 0) / GROUPS_PAGE_SIZE));
 
   const create = useMutation({
     mutationFn: async () => {
@@ -953,15 +964,9 @@ function SmallGroupsAdmin() {
     onSuccess: (created) => {
       toast.success("Small group created!");
       setName(""); setDescription(""); setMeetingDay(""); setMeetingTime(""); setLocation(""); setLeaderName(""); setMaxMembers("");
-      // Single write round-trip: seed every cache from the returned row instead of refetching.
-      if (created) {
-        const insertSorted = (old: any[] | undefined) =>
-          [...(old ?? []), created].sort((a, b) => a.name.localeCompare(b.name));
-        qc.setQueryData(["admin-small-groups"], insertSorted);
-        if (created.published) qc.setQueryData(["small-groups"], insertSorted);
-      }
-      qc.invalidateQueries({ queryKey: ["admin-small-groups"], refetchType: "none" });
-      qc.invalidateQueries({ queryKey: ["small-groups"], refetchType: "none" });
+      // Paged results: page boundaries shift on insert, so refetch the affected pages.
+      qc.invalidateQueries({ queryKey: ["admin-small-groups"] });
+      qc.invalidateQueries({ queryKey: ["small-groups"] });
     },
     onError: () => toast.error("Failed to create group."),
   });
@@ -972,20 +977,21 @@ function SmallGroupsAdmin() {
       if (error) throw error;
     },
     onMutate: async (id: string) => {
-      await qc.cancelQueries({ queryKey: ["admin-small-groups"] });
-      const previous = qc.getQueryData<any[]>(["admin-small-groups"]);
-      qc.setQueryData(["admin-small-groups"], (old: any[] | undefined) => (old ?? []).filter((g) => g.id !== id));
+      const key = ["admin-small-groups", groupPage];
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<{ rows: any[]; total: number }>(key);
+      qc.setQueryData(key, (old: { rows: any[]; total: number } | undefined) =>
+        old ? { rows: old.rows.filter((g) => g.id !== id), total: Math.max(0, old.total - 1) } : old,
+      );
       return { previous };
     },
     onError: (_err, _id, ctx) => {
-      if (ctx?.previous) qc.setQueryData(["admin-small-groups"], ctx.previous);
+      if (ctx?.previous) qc.setQueryData(["admin-small-groups", groupPage], ctx.previous);
       toast.error("Failed to delete group.");
     },
-    onSuccess: (_data, id) => {
-      qc.setQueryData(["small-groups"], (old: any[] | undefined) =>
-        old ? old.filter((g) => g.id !== id) : old,
-      );
-      qc.invalidateQueries({ queryKey: ["small-groups"], refetchType: "none" });
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-small-groups"] });
+      qc.invalidateQueries({ queryKey: ["small-groups"] });
     },
   });
 
