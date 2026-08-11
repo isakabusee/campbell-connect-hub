@@ -953,14 +953,15 @@ function SmallGroupsAdmin() {
     onSuccess: (created) => {
       toast.success("Small group created!");
       setName(""); setDescription(""); setMeetingDay(""); setMeetingTime(""); setLocation(""); setLeaderName(""); setMaxMembers("");
-      // Show the new group immediately instead of waiting for a refetch.
+      // Single write round-trip: seed every cache from the returned row instead of refetching.
       if (created) {
-        qc.setQueryData(["admin-small-groups"], (old: any[] | undefined) =>
-          [...(old ?? []), created].sort((a, b) => a.name.localeCompare(b.name)),
-        );
+        const insertSorted = (old: any[] | undefined) =>
+          [...(old ?? []), created].sort((a, b) => a.name.localeCompare(b.name));
+        qc.setQueryData(["admin-small-groups"], insertSorted);
+        if (created.published) qc.setQueryData(["small-groups"], insertSorted);
       }
       qc.invalidateQueries({ queryKey: ["admin-small-groups"], refetchType: "none" });
-      qc.invalidateQueries({ queryKey: ["small-groups"] });
+      qc.invalidateQueries({ queryKey: ["small-groups"], refetchType: "none" });
     },
     onError: () => toast.error("Failed to create group."),
   });
@@ -980,8 +981,11 @@ function SmallGroupsAdmin() {
       if (ctx?.previous) qc.setQueryData(["admin-small-groups"], ctx.previous);
       toast.error("Failed to delete group.");
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["small-groups"] });
+    onSuccess: (_data, id) => {
+      qc.setQueryData(["small-groups"], (old: any[] | undefined) =>
+        old ? old.filter((g) => g.id !== id) : old,
+      );
+      qc.invalidateQueries({ queryKey: ["small-groups"], refetchType: "none" });
     },
   });
 
