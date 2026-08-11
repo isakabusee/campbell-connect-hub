@@ -981,8 +981,11 @@ function SmallGroupsAdmin() {
       if (ctx?.previous) qc.setQueryData(["admin-small-groups"], ctx.previous);
       toast.error("Failed to delete group.");
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["small-groups"] });
+    onSuccess: (_data, id) => {
+      qc.setQueryData(["small-groups"], (old: any[] | undefined) =>
+        old ? old.filter((g) => g.id !== id) : old,
+      );
+      qc.invalidateQueries({ queryKey: ["small-groups"], refetchType: "none" });
     },
   });
 
