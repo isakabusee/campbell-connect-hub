@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { compressIfImage } from "@/lib/compressImage";
+import { compressIfImage, runPool } from "@/lib/compressImage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
