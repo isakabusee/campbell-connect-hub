@@ -3,7 +3,6 @@ import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import AnnouncementsList from "@/components/AnnouncementsList";
 import BulletinsList from "@/components/BulletinsList";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Church, BookOpen, Heart, MapPin } from "lucide-react";
 
