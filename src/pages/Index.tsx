@@ -143,7 +143,7 @@ const Index = () => {
               <div className="text-center lg:text-left">
                 <h2 className="font-display text-3xl font-bold md:text-4xl">Visit Us</h2>
                 <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
-                  Campbell Seventh-day Adventist Church is located at the address below, in the heart of Campbell. We are
+                  Our church is located at the address below, in the heart of Campbell. We are
                   just a short walk from the beautiful John D. Morgan Park, making our church easy to find and close to
                   a welcoming neighborhood green space.
                 </p>
