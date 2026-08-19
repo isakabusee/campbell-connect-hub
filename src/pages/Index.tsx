@@ -133,13 +133,24 @@ const Index = () => {
               <div className="order-1 text-center lg:order-2 lg:text-left">
                 <h2 className="font-display text-3xl font-bold md:text-4xl">A Word from Our Pastor</h2>
                 <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
-                  Welcome to Campbell Seventh-day Adventist Church! I am so glad you found your way here. Whether you
-                  are searching for a church home, visiting our community, or simply curious about who we are, you are
-                  warmly invited to join us. We are a family of believers committed to growing together in faith, sharing
-                  the love of Jesus, and serving our neighbors. It would be a joy to meet you and walk alongside you on
-                  your spiritual journey.
+                  Welcome Home! Whether you stumbled across our page by accident, are searching for a new church home, or are simply curious about what a Seventh-day Adventist community looks like, we are so glad you are here.
                 </p>
-                <p className="mt-4 font-display text-xl font-semibold text-foreground">— Pastor Thom Garner</p>
+                <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
+                  At the Campbell Seventh-day Adventist Church, we believe that church isn't a building—it's a family. Our community is a vibrant tapestry of people from all walks of life, cultures, and nations, all united by the transformative love of Jesus Christ. Life can be overwhelming and noisy, but we are dedicated to creating a safe space where you can pause, find rest, and experience true spiritual community.
+                </p>
+                <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
+                  Our doors are wide open to everyone, exactly as you are. No matter where you are on your spiritual journey, you will find open hearts, encouraging fellowship, and deep, Bible-centered teaching here.
+                </p>
+                <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
+                  Come join us this Sabbath as we rest from our weekly routines, worship together, and grow in faith. We cannot wait to meet you, hear your story, and walk alongside you.
+                </p>
+                <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
+                  With blessings and warmth,
+                  <br />
+                  The Pastoral Team & Church Family
+                  <br />
+                  Campbell Seventh-day Adventist Church
+                </p>
               </div>
             </div>
           </div>
