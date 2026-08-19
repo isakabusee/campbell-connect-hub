@@ -39,7 +39,6 @@ const Index = () => {
       <main className="flex-1">
         <HeroSection />
 
-
         {/* Pastor's welcome */}
         <section className="bg-secondary py-16">
           <div className="container">
