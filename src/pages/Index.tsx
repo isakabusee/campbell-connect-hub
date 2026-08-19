@@ -190,6 +190,33 @@ const Index = () => {
             <BulletinsList limit={2} />
           </div>
         </section>
+
+        {/* Online giving */}
+        <section className="py-16">
+          <div className="container">
+            <div className="mx-auto max-w-3xl rounded-xl border bg-card p-8 text-center shadow-sm md:p-12">
+              <h2 className="font-display text-3xl font-bold md:text-4xl">Support Our Ministry</h2>
+              <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
+                Your faithful giving helps us share God's love, support our community outreach, and sustain the mission of Campbell Seventh-day Adventist Church.
+              </p>
+              <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <Button asChild size="lg" className="font-body">
+                  <a href="https://adventistgiving.org/donate/ANP8CQ" target="_blank" rel="noopener noreferrer">
+                    Give Online
+                  </a>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="font-body">
+                  <a href="https://adventistgiving.org/donate/ANP8CQ" target="_blank" rel="noopener noreferrer">
+                    Learn More
+                  </a>
+                </Button>
+              </div>
+              <p className="mt-6 font-body text-sm text-muted-foreground">
+                Secure giving through Adventist Giving. Thank you for your generosity.
+              </p>
+            </div>
+          </div>
+        </section>
       </main>
       <Footer />
     </div>
