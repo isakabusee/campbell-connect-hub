@@ -205,11 +205,6 @@ const Index = () => {
                     Give Online
                   </a>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="font-body">
-                  <a href="https://adventistgiving.org/donate/ANP8CQ" target="_blank" rel="noopener noreferrer">
-                    Learn More
-                  </a>
-                </Button>
               </div>
               <p className="mt-6 font-body text-sm text-muted-foreground">
                 Secure giving through Adventist Giving. Thank you for your generosity.
