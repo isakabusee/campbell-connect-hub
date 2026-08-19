@@ -14,19 +14,26 @@ const Index = () => {
       <main className="flex-1">
         <HeroSection />
 
-        {/* About preview */}
+        {/* Visit preview */}
         <section className="py-16">
           <div className="container">
             <div className="mx-auto max-w-4xl text-center">
-              <h2 className="font-display text-3xl font-bold md:text-4xl">About Us</h2>
+              <h2 className="font-display text-3xl font-bold md:text-4xl">Visit Us</h2>
               <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
-                The Campbell Seventh-day Adventist Church is part of a major worldwide Christian denomination whose
-                central foundational beliefs are grounded in Jesus Christ. We believe that God's character of love has
-                been revealed to the world through Christ, and that we are saved through Christ alone by his death and
-                resurrection.
+                Campbell Seventh-day Adventist Church is located at{" "}
+                <strong className="text-foreground">600 W Campbell Ave, Campbell, CA 95008</strong>, in the heart of
+                Campbell. We are just a short walk from the beautiful John D. Morgan Park, making our church easy to find
+                and close to a welcoming neighborhood green space.
               </p>
               <Button asChild variant="outline" className="mt-6 font-body">
-                <Link to="/about">Learn More About Us</Link>
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=600+W+Campbell+Ave%2C+Campbell%2C+CA+95008"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MapPin size={16} className="mr-2" aria-hidden="true" />
+                  Get Directions
+                </a>
               </Button>
             </div>
           </div>
