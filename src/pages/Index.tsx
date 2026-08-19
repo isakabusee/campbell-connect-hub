@@ -5,7 +5,7 @@ import AnnouncementsList from "@/components/AnnouncementsList";
 import BulletinsList from "@/components/BulletinsList";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Church, BookOpen, Heart } from "lucide-react";
+import { Church, BookOpen, Heart, MapPin } from "lucide-react";
 
 const Index = () => {
   return (
