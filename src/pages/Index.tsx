@@ -39,83 +39,6 @@ const Index = () => {
       <main className="flex-1">
         <HeroSection />
 
-        {/* Visit preview */}
-        <section className="py-16">
-          <div className="container">
-            <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2 lg:items-center">
-              <div className="text-center lg:text-left">
-                <h2 className="font-display text-3xl font-bold md:text-4xl">Visit Us</h2>
-                <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
-                  Campbell Seventh-day Adventist Church is located at the address below, in the heart of Campbell. We are
-                  just a short walk from the beautiful John D. Morgan Park, making our church easy to find and close to
-                  a welcoming neighborhood green space.
-                </p>
-                <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row lg:items-start">
-                  <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 shadow-sm">
-                    <MapPin size={18} className="shrink-0 text-accent" aria-hidden="true" />
-                    <span className="font-body font-medium">{CHURCH_ADDRESS}</span>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={copyAddress}
-                    aria-label={copied ? "Address copied" : "Copy church address to clipboard"}
-                    className="font-body"
-                  >
-                    {copied ? (
-                      <>
-                        <Check size={16} className="mr-2" aria-hidden="true" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={16} className="mr-2" aria-hidden="true" />
-                        Copy Address
-                      </>
-                    )}
-                  </Button>
-                </div>
-                <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row lg:items-start">
-                  <Button asChild className="font-body">
-                    <a href={GOOGLE_MAPS_LINK} target="_blank" rel="noopener noreferrer">
-                      <MapPin size={16} className="mr-2" aria-hidden="true" />
-                      Get Directions
-                    </a>
-                  </Button>
-                </div>
-              </div>
-              <div className="overflow-hidden rounded-xl border shadow-sm">
-                {embedUrl ? (
-                  <iframe
-                    title="Campbell Seventh-day Adventist Church location"
-                    src={embedUrl}
-                    width="100%"
-                    height="360"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    className="block"
-                    aria-label="Embedded Google Map showing the church location"
-                  />
-                ) : (
-                  <div className="flex h-[360px] flex-col items-center justify-center gap-4 bg-muted p-6 text-center">
-                    <MapPin size={40} className="text-muted-foreground" aria-hidden="true" />
-                    <p className="font-body text-muted-foreground">
-                      Map loading is unavailable. Please use the Get Directions button to view our location.
-                    </p>
-                    <Button asChild variant="outline" className="font-body">
-                      <a href={GOOGLE_MAPS_LINK} target="_blank" rel="noopener noreferrer">
-                        Open in Google Maps
-                      </a>
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Pastor's welcome */}
         <section className="bg-secondary py-16">
           <div className="container">
@@ -209,6 +132,83 @@ const Index = () => {
               <p className="mt-6 font-body text-sm text-muted-foreground">
                 Secure giving through Adventist Giving. Thank you for your generosity.
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Visit preview */}
+        <section className="py-16">
+          <div className="container">
+            <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2 lg:items-center">
+              <div className="text-center lg:text-left">
+                <h2 className="font-display text-3xl font-bold md:text-4xl">Visit Us</h2>
+                <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
+                  Campbell Seventh-day Adventist Church is located at the address below, in the heart of Campbell. We are
+                  just a short walk from the beautiful John D. Morgan Park, making our church easy to find and close to
+                  a welcoming neighborhood green space.
+                </p>
+                <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row lg:items-start">
+                  <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 shadow-sm">
+                    <MapPin size={18} className="shrink-0 text-accent" aria-hidden="true" />
+                    <span className="font-body font-medium">{CHURCH_ADDRESS}</span>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={copyAddress}
+                    aria-label={copied ? "Address copied" : "Copy church address to clipboard"}
+                    className="font-body"
+                  >
+                    {copied ? (
+                      <>
+                        <Check size={16} className="mr-2" aria-hidden="true" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={16} className="mr-2" aria-hidden="true" />
+                        Copy Address
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row lg:items-start">
+                  <Button asChild className="font-body">
+                    <a href={GOOGLE_MAPS_LINK} target="_blank" rel="noopener noreferrer">
+                      <MapPin size={16} className="mr-2" aria-hidden="true" />
+                      Get Directions
+                    </a>
+                  </Button>
+                </div>
+              </div>
+              <div className="overflow-hidden rounded-xl border shadow-sm">
+                {embedUrl ? (
+                  <iframe
+                    title="Campbell Seventh-day Adventist Church location"
+                    src={embedUrl}
+                    width="100%"
+                    height="360"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="block"
+                    aria-label="Embedded Google Map showing the church location"
+                  />
+                ) : (
+                  <div className="flex h-[360px] flex-col items-center justify-center gap-4 bg-muted p-6 text-center">
+                    <MapPin size={40} className="text-muted-foreground" aria-hidden="true" />
+                    <p className="font-body text-muted-foreground">
+                      Map loading is unavailable. Please use the Get Directions button to view our location.
+                    </p>
+                    <Button asChild variant="outline" className="font-body">
+                      <a href={GOOGLE_MAPS_LINK} target="_blank" rel="noopener noreferrer">
+                        Open in Google Maps
+                      </a>
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </section>
