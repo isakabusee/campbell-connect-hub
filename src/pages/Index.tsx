@@ -26,10 +26,9 @@ const Index = () => {
   };
 
   const browserKey = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
-  const trackingId = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID;
   const embedUrl =
     browserKey &&
-    `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(browserKey)}&q=${encodeURIComponent(CHURCH_ADDRESS)}${trackingId ? `&channel=${encodeURIComponent(trackingId)}` : ""}`;
+    `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(browserKey)}&q=${encodeURIComponent(CHURCH_ADDRESS)}`;
 
   return (
     <div className="flex min-h-screen flex-col">
