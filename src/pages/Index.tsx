@@ -122,12 +122,12 @@ const Index = () => {
             <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
               <div className="order-2 lg:order-1">
                 <img
-                  src={pastorThomImage}
+                  src={pastorThomImage.url}
                   alt="Pastor Thom Garner"
-                  width={816}
-                  height={816}
+                  width={896}
+                  height={1195}
                   loading="lazy"
-                  className="mx-auto aspect-square w-full max-w-sm rounded-xl object-cover shadow-md lg:mx-0"
+                  className="mx-auto aspect-[3/4] w-full max-w-sm rounded-xl object-cover shadow-md lg:mx-0"
                 />
               </div>
               <div className="order-1 text-center lg:order-2 lg:text-left">
