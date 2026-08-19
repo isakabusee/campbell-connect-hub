@@ -57,37 +57,62 @@ const ContactPage = () => {
                 We'd love to hear from you. Whether you're looking for a church home,
                 have questions, or want to get involved, reach out to us.
               </p>
-              <div className="space-y-4 font-body text-sm">
-                <div className="flex items-start gap-3">
-                  <MapPin size={18} className="mt-0.5 text-accent" />
-                  <div>
-                    <p className="font-semibold">Address</p>
-                    <p className="text-muted-foreground">600 W Campbell Ave, Campbell, CA 95008</p>
+                <div className="space-y-4 font-body text-sm">
+                  <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <MapPin size={18} className="mt-0.5 text-accent" aria-hidden="true" />
+                      <div>
+                        <p className="font-semibold">Address</p>
+                        <p className="text-muted-foreground">600 W Campbell Ave, Campbell, CA 95008</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button asChild size="sm" className="font-body">
+                        <a
+                          href={GOOGLE_MAPS_DIRECTIONS_LINK}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Get directions to Campbell SDA Church in Google Maps"
+                        >
+                          <Navigation size={16} className="mr-2" aria-hidden="true" />
+                          Get Directions
+                        </a>
+                      </Button>
+                      <Button asChild variant="outline" size="sm" className="font-body">
+                        <a
+                          href="https://www.google.com/maps/search/?api=1&query=600+W+Campbell+Ave%2C+Campbell%2C+CA+95008"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="View Campbell SDA Church location in Google Maps"
+                        >
+                          View on Map
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Phone size={18} className="mt-0.5 text-accent" aria-hidden="true" />
+                    <div>
+                      <p className="font-semibold">Phone</p>
+                      <p className="text-muted-foreground">(408) 866-4625</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Mail size={18} className="mt-0.5 text-accent" aria-hidden="true" />
+                    <div>
+                      <p className="font-semibold">Email</p>
+                      <p className="text-muted-foreground">isakabusee@gmail.com</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Clock size={18} className="mt-0.5 text-accent" aria-hidden="true" />
+                    <div>
+                      <p className="font-semibold">Service Times</p>
+                      <p className="text-muted-foreground">Sabbath School: 9:30 AM</p>
+                      <p className="text-muted-foreground">Divine Worship: 11:00 AM</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Phone size={18} className="mt-0.5 text-accent" />
-                  <div>
-                    <p className="font-semibold">Phone</p>
-                    <p className="text-muted-foreground">(408) 866-4625</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Mail size={18} className="mt-0.5 text-accent" />
-                  <div>
-                    <p className="font-semibold">Email</p>
-                    <p className="text-muted-foreground">isakabusee@gmail.com</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Clock size={18} className="mt-0.5 text-accent" />
-                  <div>
-                    <p className="font-semibold">Service Times</p>
-                    <p className="text-muted-foreground">Sabbath School: 9:30 AM</p>
-                    <p className="text-muted-foreground">Divine Worship: 11:00 AM</p>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Form */}
