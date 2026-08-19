@@ -7,6 +7,7 @@ import BulletinsList from "@/components/BulletinsList";
 import { Button } from "@/components/ui/button";
 import { Church, BookOpen, Heart, MapPin, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
+import pastorThomImage from "@/assets/pastor-thom-garner.jpg";
 
 const CHURCH_ADDRESS = "600 W Campbell Ave, Campbell, CA 95008";
 const GOOGLE_MAPS_LINK = "https://www.google.com/maps/search/?api=1&query=600+W+Campbell+Ave%2C+Campbell%2C+CA+95008";
