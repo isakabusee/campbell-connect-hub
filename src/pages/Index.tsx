@@ -26,8 +26,10 @@ const Index = () => {
   };
 
   const browserKey = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
+  const isLocalDev = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname.endsWith(".local"));
   const embedUrl =
     browserKey &&
+    !isLocalDev &&
     `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(browserKey)}&q=${encodeURIComponent(CHURCH_ADDRESS)}`;
 
   return (
