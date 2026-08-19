@@ -7,7 +7,7 @@ import BulletinsList from "@/components/BulletinsList";
 import { Button } from "@/components/ui/button";
 import { Church, BookOpen, Heart, MapPin, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
-import pastorThomImage from "@/assets/pastor-thom-garner.jpg.asset.json";
+import pastorThomImage from "@/assets/pastor-thom-garner.jpg";
 
 const CHURCH_ADDRESS = "600 W Campbell Ave, Campbell, CA 95008";
 const GOOGLE_MAPS_LINK = "https://www.google.com/maps/search/?api=1&query=600+W+Campbell+Ave%2C+Campbell%2C+CA+95008";
@@ -122,7 +122,7 @@ const Index = () => {
             <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
               <div className="order-2 lg:order-1">
                 <img
-                  src={pastorThomImage.url}
+                  src={pastorThomImage}
                   alt="Pastor Thom Garner"
                   width={896}
                   height={1195}
