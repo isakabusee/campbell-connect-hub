@@ -116,6 +116,35 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Pastor's welcome */}
+        <section className="bg-secondary py-16">
+          <div className="container">
+            <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
+              <div className="order-2 lg:order-1">
+                <img
+                  src={pastorThomImage}
+                  alt="Pastor Thom Garner"
+                  width={816}
+                  height={816}
+                  loading="lazy"
+                  className="mx-auto aspect-square w-full max-w-sm rounded-xl object-cover shadow-md lg:mx-0"
+                />
+              </div>
+              <div className="order-1 text-center lg:order-2 lg:text-left">
+                <h2 className="font-display text-3xl font-bold md:text-4xl">A Word from Our Pastor</h2>
+                <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
+                  Welcome to Campbell Seventh-day Adventist Church! I am so glad you found your way here. Whether you
+                  are searching for a church home, visiting our community, or simply curious about who we are, you are
+                  warmly invited to join us. We are a family of believers committed to growing together in faith, sharing
+                  the love of Jesus, and serving our neighbors. It would be a joy to meet you and walk alongside you on
+                  your spiritual journey.
+                </p>
+                <p className="mt-4 font-display text-xl font-semibold text-foreground">— Pastor Thom Garner</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Service info cards */}
         <section className="bg-secondary py-16">
           <div className="container">
