@@ -118,7 +118,7 @@ const Index = () => {
         <section className="py-16">
           <div className="container">
             <div className="mx-auto max-w-3xl rounded-xl border bg-card p-8 text-center shadow-sm md:p-12">
-              <h2 className="font-display text-3xl font-bold md:text-4xl">Support Our Ministry</h2>
+              <h2 className="font-display text-3xl font-bold md:text-4xl">Tithes and Offerings</h2>
               <p className="mt-4 font-body text-lg text-muted-foreground leading-relaxed">
                 Your faithful giving helps us share God's love, support our community outreach, and sustain the mission of Campbell Seventh-day Adventist Church.
               </p>
