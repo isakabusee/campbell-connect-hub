@@ -48,7 +48,7 @@ const Index = () => {
                   src={pastorThomImage}
                   alt="Pastor Thom Garner"
                   width={896}
-                  height={1195}
+                  height={1200}
                   loading="lazy"
                   className="mx-auto aspect-[3/4] w-full max-w-sm rounded-xl object-cover shadow-md lg:mx-0"
                 />
