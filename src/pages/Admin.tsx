@@ -259,7 +259,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
     },
     onSuccess: () => {
       toast.success("Bulletin created!");
-      setTitle(""); setContent(""); setFiles([]);
+      setTitle(""); setContent(""); setFiles([]); setAttachmentErrors([]);
       setUploading(false); setUploadProgress(0);
       qc.invalidateQueries({ queryKey: ["admin-bulletins"] });
       qc.invalidateQueries({ queryKey: ["bulletins"] });
