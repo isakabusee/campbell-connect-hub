@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Trash2, Upload, CalendarDays, ImagePlus, Plus, Users, ArrowLeft, ArrowRight, Star } from "lucide-react";
 import { format } from "date-fns";
 import { supabase as sb } from "@/integrations/supabase/client";
+import SignOutTroubleshooter from "@/components/admin/SignOutTroubleshooter";
 
 const AdminPage = () => {
   const { user, isAdmin, loading } = useAuth();
@@ -38,6 +39,7 @@ const AdminPage = () => {
               <TabsTrigger value="gallery" className="font-body">Gallery</TabsTrigger>
               <TabsTrigger value="groups" className="font-body">Groups</TabsTrigger>
               <TabsTrigger value="messages" className="font-body">Messages</TabsTrigger>
+              <TabsTrigger value="help" className="font-body">Help</TabsTrigger>
             </TabsList>
             <TabsContent value="announcements"><AnnouncementsAdmin userId={user.id} /></TabsContent>
             <TabsContent value="bulletins"><BulletinsAdmin userId={user.id} /></TabsContent>
@@ -46,6 +48,7 @@ const AdminPage = () => {
             <TabsContent value="gallery"><GalleryAdmin userId={user.id} /></TabsContent>
             <TabsContent value="groups"><SmallGroupsAdmin /></TabsContent>
             <TabsContent value="messages"><MessagesAdmin /></TabsContent>
+            <TabsContent value="help"><SignOutTroubleshooter /></TabsContent>
           </Tabs>
         </div>
       </main>
