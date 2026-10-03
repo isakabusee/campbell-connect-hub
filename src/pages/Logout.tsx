@@ -9,7 +9,7 @@ const Logout = () => {
   const doneRef = useRef(false);
 
   useEffect(() => {
-    // Never hang on sign-out: route home after 3s no matter what.
+    // Never hang on sign-out: route to sign-in after 3s no matter what.
     const timeout = setTimeout(finish, 3000);
 
     function finish() {
@@ -19,10 +19,10 @@ const Logout = () => {
       // Drop cached member/admin data so nothing stale lingers after sign-out.
       queryClient.clear();
       // replace: true means the browser Back button can't return to this page.
-      navigate("/", { replace: true });
+      navigate("/login", { replace: true });
       // Fallback: if the route change didn't take, force a fresh load of home.
       setTimeout(() => {
-        if (window.location.pathname !== "/") window.location.replace("/");
+        if (window.location.pathname !== "/login") window.location.replace("/login");
       }, 500);
     }
 
