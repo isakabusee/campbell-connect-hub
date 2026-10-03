@@ -273,9 +273,11 @@ function BulletinsAdmin({ userId }: { userId: string }) {
       if (error) throw error;
     },
     onSuccess: () => {
+      toast.success("Bulletin deleted.");
       qc.invalidateQueries({ queryKey: ["admin-bulletins"] });
       qc.invalidateQueries({ queryKey: ["bulletins"] });
     },
+    onError: (err: any) => toast.error(err?.message || "Failed to delete bulletin. Please sign in again and retry."),
   });
 
   return (
@@ -362,7 +364,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
                   </div>
                 )}
               </div>
-              <Button variant="ghost" size="icon" onClick={() => del.mutate(b.id)}><Trash2 size={16} className="text-destructive" /></Button>
+              <Button variant="ghost" size="icon" aria-label={`Delete bulletin ${b.title}`} disabled={del.isPending} onClick={() => del.mutate(b.id)}><Trash2 size={16} className="text-destructive" /></Button>
             </CardContent>
           </Card>
         ))}
