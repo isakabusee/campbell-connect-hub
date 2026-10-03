@@ -3,29 +3,34 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Logout = () => {
   useEffect(() => {
-    // Force-clear session from localStorage immediately
-    const storageKey = Object.keys(localStorage).find((k) =>
-      k.startsWith("sb-") && k.endsWith("-auth-token")
-    );
-    if (storageKey) {
-      localStorage.removeItem(storageKey);
-    }
-
-    // Attempt signOut but don't wait on it indefinitely
-    const timeout = setTimeout(() => {
+    let redirected = false;
+    const finish = () => {
+      if (redirected) return;
+      redirected = true;
       window.location.href = "/";
-    }, 2000);
+    };
 
-    supabase.auth
-      .signOut({ scope: "local" })
-      .then(() => {
-        clearTimeout(timeout);
-        window.location.href = "/";
-      })
-      .catch(() => {
-        clearTimeout(timeout);
-        window.location.href = "/";
-      });
+    // Never hang on sign-out: redirect after 3s no matter what.
+    const timeout = setTimeout(finish, 3000);
+
+    (async () => {
+      try {
+        // signOut clears the session through the client's storage adapter,
+        // which also clears the brokered preview copy — removing the key from
+        // raw localStorage alone would let the session resurrect.
+        await supabase.auth.signOut({ scope: "local" });
+      } catch {
+        // ignore — we clear local state below regardless
+      }
+      // Belt-and-braces: drop any lingering auth keys from localStorage.
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
+        .forEach((k) => localStorage.removeItem(k));
+      clearTimeout(timeout);
+      finish();
+    })();
+
+    return () => clearTimeout(timeout);
   }, []);
 
   return (
