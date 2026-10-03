@@ -190,10 +190,44 @@ function BulletinsAdmin({ userId }: { userId: string }) {
     },
   });
 
+  // Allowed attachment types and size limits (images are also compressed before upload)
+  const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "jpg", "jpeg", "png", "webp"];
+  const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB for images
+  const MAX_DOC_SIZE = 20 * 1024 * 1024; // 20 MB for documents (matches storage bucket limit)
+  const formatSize = (bytes: number) => (bytes >= 1024 * 1024 ? `${Math.round(bytes / (1024 * 1024))} MB` : `${Math.round(bytes / 1024)} KB`);
+
+  const [attachmentErrors, setAttachmentErrors] = useState<string[]>([]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+    const selected = Array.from(e.target.files ?? []);
+    e.target.value = ""; // allow re-selecting the same file after an error
+    if (selected.length === 0) return;
+
+    const accepted: File[] = [];
+    const errors: string[] = [];
+
+    for (const f of selected) {
+      const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        errors.push(`"${f.name}" is not a supported file type. Allowed: PDF, DOC, DOCX, JPG, PNG, WEBP.`);
+        continue;
+      }
+      const isImage = ["jpg", "jpeg", "png", "webp"].includes(ext);
+      const max = isImage ? MAX_IMAGE_SIZE : MAX_DOC_SIZE;
+      if (f.size > max) {
+        errors.push(`"${f.name}" is ${formatSize(f.size)} — too large. ${isImage ? "Images" : "Documents"} must be ${formatSize(max)} or smaller.`);
+        continue;
+      }
+      accepted.push(f);
     }
+
+    if (errors.length > 0) {
+      setAttachmentErrors(errors);
+      toast.error(`${errors.length} file${errors.length > 1 ? "s" : ""} could not be added. ${errors[0]}`);
+    } else {
+      setAttachmentErrors([]);
+    }
+    if (accepted.length > 0) setFiles((prev) => [...prev, ...accepted]);
   };
 
   const removeFile = (index: number) => {
