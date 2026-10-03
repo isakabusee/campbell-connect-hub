@@ -273,9 +273,11 @@ function BulletinsAdmin({ userId }: { userId: string }) {
       if (error) throw error;
     },
     onSuccess: () => {
+      toast.success("Bulletin deleted.");
       qc.invalidateQueries({ queryKey: ["admin-bulletins"] });
       qc.invalidateQueries({ queryKey: ["bulletins"] });
     },
+    onError: (err: any) => toast.error(err?.message || "Failed to delete bulletin. Please sign in again and retry."),
   });
 
   return (
