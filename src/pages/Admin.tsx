@@ -259,7 +259,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
     },
     onSuccess: () => {
       toast.success("Bulletin created!");
-      setTitle(""); setContent(""); setFiles([]);
+      setTitle(""); setContent(""); setFiles([]); setAttachmentErrors([]);
       setUploading(false); setUploadProgress(0);
       qc.invalidateQueries({ queryKey: ["admin-bulletins"] });
       qc.invalidateQueries({ queryKey: ["bulletins"] });
@@ -290,6 +290,14 @@ function BulletinsAdmin({ userId }: { userId: string }) {
             <p className="font-body text-sm font-semibold text-foreground">Attachments (optional)</p>
             <Label className="font-body text-sm text-muted-foreground">Upload PDFs, images, or documents</Label>
             <Input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" multiple onChange={handleFileChange} />
+            <p className="text-xs text-muted-foreground font-body">PDF, DOC, DOCX, JPG, PNG, WEBP — up to 10 MB per image, 20 MB per document.</p>
+            {attachmentErrors.length > 0 && (
+              <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive font-body">
+                {attachmentErrors.map((err, i) => (
+                  <p key={i}>{err}</p>
+                ))}
+              </div>
+            )}
             {files.length > 0 && (
               <ul className="space-y-1">
                 {files.map((f, i) => (
