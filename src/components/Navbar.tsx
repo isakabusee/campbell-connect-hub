@@ -57,11 +57,6 @@ const Navbar = () => {
 
         {/* Mobile toggle */}
         <div className="flex items-center gap-3 md:hidden">
-          {!user && (
-            <Button asChild size="sm" className="h-8 px-3 text-xs">
-              <Link to="/login">Sign In</Link>
-            </Button>
-          )}
           <button
             className="text-foreground"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -94,7 +89,7 @@ const Navbar = () => {
                 <Link to="/logout">Sign Out</Link>
               </Button>
             ) : (
-              <Button asChild size="sm">
+              <Button asChild size="sm" onClick={() => setMobileOpen(false)}>
                 <Link to="/login">Sign In</Link>
               </Button>
             )}
