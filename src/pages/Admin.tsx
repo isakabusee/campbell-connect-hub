@@ -259,9 +259,18 @@ function BulletinsAdmin({ userId }: { userId: string }) {
             {files.length > 0 && (
               <ul className="space-y-1">
                 {files.map((f, i) => (
-                  <li key={i} className="flex items-center justify-between rounded bg-muted px-2 py-1 text-xs font-body">
-                    <span className="truncate">{f.name}</span>
-                    <button type="button" onClick={() => removeFile(i)} className="ml-2 text-destructive hover:underline">Remove</button>
+                  <li key={i} className="flex items-center justify-between gap-2 rounded bg-muted px-2 py-1 text-xs font-body">
+                    <span className="flex min-w-0 items-center gap-2">
+                      {f.type.startsWith("image/") && (
+                        <img
+                          src={URL.createObjectURL(f)}
+                          alt=""
+                          className="h-8 w-8 shrink-0 rounded object-cover"
+                        />
+                      )}
+                      <span className="truncate">{f.name}</span>
+                    </span>
+                    <button type="button" onClick={() => removeFile(i)} className="ml-2 shrink-0 text-destructive hover:underline">Remove</button>
                   </li>
                 ))}
               </ul>
@@ -297,11 +306,17 @@ function BulletinsAdmin({ userId }: { userId: string }) {
                 <p className="mt-1 text-sm text-muted-foreground font-body whitespace-pre-line">{b.content}</p>
                 {b.file_urls && b.file_urls.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {b.file_urls.map((url: string, i: number) => (
-                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent font-body">
-                        📎 Attachment {b.file_urls!.length > 1 ? i + 1 : ""}
-                      </a>
-                    ))}
+                    {b.file_urls.map((url: string, i: number) =>
+                      /\.(png|jpe?g|webp|gif|svg|bmp)$/i.test(url) ? (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" aria-label={`View image attachment ${i + 1}`}>
+                          <img src={url} alt={`Attachment ${i + 1}`} className="h-16 w-16 rounded object-cover ring-1 ring-border hover:ring-accent" loading="lazy" />
+                        </a>
+                      ) : (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent font-body">
+                          📎 Attachment {b.file_urls!.length > 1 ? i + 1 : ""}
+                        </a>
+                      )
+                    )}
                   </div>
                 )}
               </div>
