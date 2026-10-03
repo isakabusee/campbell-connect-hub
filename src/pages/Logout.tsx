@@ -16,6 +16,11 @@ const Logout = () => {
       if (doneRef.current) return;
       doneRef.current = true;
       clearTimeout(timeout);
+      // Drop any lingering auth keys from localStorage — this runs even if
+      // signOut() hangs, so the session can never resurrect after sign-out.
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
+        .forEach((k) => localStorage.removeItem(k));
       // Drop cached member/admin data so nothing stale lingers after sign-out.
       queryClient.clear();
       // replace: true means the browser Back button can't return to this page.
@@ -33,12 +38,8 @@ const Logout = () => {
         // raw localStorage alone would let the session resurrect.
         await supabase.auth.signOut({ scope: "local" });
       } catch {
-        // ignore — we clear local state below regardless
+        // ignore — finish() clears local state regardless
       }
-      // Belt-and-braces: drop any lingering auth keys from localStorage.
-      Object.keys(localStorage)
-        .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
-        .forEach((k) => localStorage.removeItem(k));
       finish();
     })();
 
