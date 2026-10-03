@@ -1,17 +1,30 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const Logout = () => {
-  useEffect(() => {
-    let redirected = false;
-    const finish = () => {
-      if (redirected) return;
-      redirected = true;
-      window.location.href = "/";
-    };
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const doneRef = useRef(false);
 
-    // Never hang on sign-out: redirect after 3s no matter what.
+  useEffect(() => {
+    // Never hang on sign-out: route home after 3s no matter what.
     const timeout = setTimeout(finish, 3000);
+
+    function finish() {
+      if (doneRef.current) return;
+      doneRef.current = true;
+      clearTimeout(timeout);
+      // Drop cached member/admin data so nothing stale lingers after sign-out.
+      queryClient.clear();
+      // replace: true means the browser Back button can't return to this page.
+      navigate("/", { replace: true });
+      // Fallback: if the route change didn't take, force a fresh load of home.
+      setTimeout(() => {
+        if (window.location.pathname !== "/") window.location.replace("/");
+      }, 500);
+    }
 
     (async () => {
       try {
@@ -26,12 +39,11 @@ const Logout = () => {
       Object.keys(localStorage)
         .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
         .forEach((k) => localStorage.removeItem(k));
-      clearTimeout(timeout);
       finish();
     })();
 
     return () => clearTimeout(timeout);
-  }, []);
+  }, [navigate, queryClient]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
