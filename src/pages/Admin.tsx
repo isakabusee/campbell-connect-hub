@@ -364,7 +364,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
                   </div>
                 )}
               </div>
-              <Button variant="ghost" size="icon" onClick={() => del.mutate(b.id)}><Trash2 size={16} className="text-destructive" /></Button>
+              <Button variant="ghost" size="icon" aria-label={`Delete bulletin ${b.title}`} disabled={del.isPending} onClick={() => del.mutate(b.id)}><Trash2 size={16} className="text-destructive" /></Button>
             </CardContent>
           </Card>
         ))}
