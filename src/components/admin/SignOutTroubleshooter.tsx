@@ -14,7 +14,7 @@ function renderMarkdown(md: string) {
     const t = line.trim();
     if (!t) return <div key={i} className="h-2" />;
     if (t.startsWith("## ")) return <h3 key={i} className="mt-4 font-display text-lg font-semibold">{t.slice(3)}</h3>;
-    const html = t.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/</g, "&lt;").replace(/&lt;(\/?)strong>/g, "<$1strong>");
+    const html = t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     if (/^[-*] /.test(t)) return <li key={i} className="ml-5 list-disc" dangerouslySetInnerHTML={{ __html: html.slice(2) }} />;
     if (/^\d+\. /.test(t)) return <li key={i} className="ml-5 list-decimal" dangerouslySetInnerHTML={{ __html: html.replace(/^\d+\. /, "") }} />;
     return <p key={i} dangerouslySetInnerHTML={{ __html: html }} />;
