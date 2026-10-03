@@ -38,12 +38,8 @@ const Logout = () => {
         // raw localStorage alone would let the session resurrect.
         await supabase.auth.signOut({ scope: "local" });
       } catch {
-        // ignore — we clear local state below regardless
+        // ignore — finish() clears local state regardless
       }
-      // Belt-and-braces: drop any lingering auth keys from localStorage.
-      Object.keys(localStorage)
-        .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
-        .forEach((k) => localStorage.removeItem(k));
       finish();
     })();
 
