@@ -1,6 +1,6 @@
 import { useEffect, useState, createContext, useContext } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import type { User, Session } from "@supabase/supabase-js";
 
 interface AuthContext {
   user: User | null;
@@ -18,31 +18,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
+    let active = true;
+    let receivedEvent = false;
 
-        if (currentUser) {
-          const { data } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", currentUser.id)
-            .eq("role", "admin")
-            .maybeSingle();
-          setIsAdmin(!!data);
-        } else {
-          setIsAdmin(false);
-        }
-        setLoading(false);
+    const applySession = async (session: Session | null) => {
+      const currentUser = session?.user ?? null;
+      if (!active) return;
+      setUser(currentUser);
+
+      if (currentUser) {
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", currentUser.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        if (!active) return;
+        setIsAdmin(!!data);
+      } else {
+        setIsAdmin(false);
+      }
+      setLoading(false);
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        receivedEvent = true;
+        void applySession(session);
       }
     );
 
+    // Also seed from the stored session, so a signed-out visitor is never left
+    // showing the signed-in menu just because the change event didn't arrive.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) setLoading(false);
+      if (!receivedEvent) void applySession(session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
