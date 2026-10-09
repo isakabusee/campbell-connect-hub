@@ -251,7 +251,7 @@ function AttachmentDownload({
   );
 
   // PDFs can be previewed inline — add a Preview button next to the download chip.
-  if (kind === "pdf" && !loading) {
+  if (previewKindFromName(name) !== "other" && !loading) {
     return (
       <span className="inline-flex items-center gap-1.5">
         {chip}
