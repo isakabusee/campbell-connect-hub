@@ -308,7 +308,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
         })
       );
 
-      const { error } = await supabase.from("bulletins").insert({ title, content, date, author_id: userId, file_urls });
+      const { error } = await supabase.from("bulletins").insert({ title, content: content.trim(), date, author_id: userId, file_urls });
       if (error) throw error;
     },
     onSuccess: () => {
