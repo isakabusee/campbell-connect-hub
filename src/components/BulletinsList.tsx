@@ -392,6 +392,7 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
                             <ImageAttachment
                               url={url}
                               alt={`${b.title} attachment image ${i + 1}`}
+                              onPreview={(u, n) => setPreview({ url: u, name: n, kind: "image" })}
                             />
                           </li>
                         ))}
@@ -403,7 +404,13 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
                           const kind = docKindFromName(fileNameFromUrl(url));
                           return (
                             <li key={`doc-${i}`}>
-                              <AttachmentDownload url={url} kind={kind} />
+                              <AttachmentDownload
+                                url={url}
+                                kind={kind}
+                                onPreview={(u, n) =>
+                                  setPreview({ url: u, name: n, kind: previewKindFromName(n) })
+                                }
+                              />
                             </li>
                           );
                         })}
