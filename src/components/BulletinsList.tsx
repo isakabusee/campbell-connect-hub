@@ -343,6 +343,7 @@ function ImageAttachment({
 }
 
 const BulletinsList = ({ limit }: { limit?: number }) => {
+  const [preview, setPreview] = useState<PreviewTarget>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["bulletins"],
     queryFn: async () => {
