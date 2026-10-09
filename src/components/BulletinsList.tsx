@@ -209,7 +209,7 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
   const accessibleLabel = loading
     ? `Downloading ${kindLabel.toLowerCase()} ${name}, please wait`
     : `Download ${kindLabel.toLowerCase()} ${name}`;
-  return (
+  const chip = (
     <button
       type="button"
       onClick={handleDownload}
@@ -241,6 +241,27 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
       </span>
     </button>
   );
+
+  // PDFs can be previewed inline — add a Preview button next to the download chip.
+  if (kind === "pdf" && !loading) {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        {chip}
+        <button
+          type="button"
+          onClick={() => onPreview(url, name)}
+          aria-label={`Preview ${name}`}
+          title="Preview this document"
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary/50 px-2.5 py-1.5 text-xs font-body text-foreground transition hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          <Eye size={14} aria-hidden="true" />
+          Preview
+        </button>
+      </span>
+    );
+  }
+
+  return chip;
 }
 
 /**
