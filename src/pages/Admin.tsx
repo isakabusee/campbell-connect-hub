@@ -211,6 +211,11 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
                       : <img key={u} src={u} alt="" className="h-16 w-16 rounded object-cover" />)}
                   </div>
                 )}
+                {a.video_link && (
+                  <a href={a.video_link} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-accent font-body">
+                    🔗 Video link
+                  </a>
+                )}
               </div>
               <Button variant="ghost" size="icon" onClick={() => del.mutate(a.id)}><Trash2 size={16} className="text-destructive" /></Button>
             </CardContent>
