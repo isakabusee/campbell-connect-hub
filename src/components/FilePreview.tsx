@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Download, ExternalLink, Loader2 } from "lucide-react";
 
-export type PreviewKind = "image" | "pdf" | "other";
+export type PreviewKind = "image" | "pdf" | "office" | "other";
 
 export type PreviewTarget = {
   url: string;
@@ -21,6 +21,7 @@ export type PreviewTarget = {
 export function previewKindFromName(name: string): PreviewKind {
   if (/\.(png|jpe?g|webp|gif|svg|bmp|heic|tiff?)$/i.test(name)) return "image";
   if (/\.pdf$/i.test(name)) return "pdf";
+  if (/\.(docx?|xlsx?|pptx?)$/i.test(name)) return "office";
   return "other";
 }
 
@@ -100,7 +101,7 @@ export function FilePreviewDialog({
           <DialogDescription className="sr-only">
             {kind === "image"
               ? "Image preview"
-              : kind === "pdf"
+              : kind === "pdf" || kind === "office"
                 ? "Document preview"
                 : "File preview is not available for this file type"}
           </DialogDescription>
@@ -117,9 +118,9 @@ export function FilePreviewDialog({
             </div>
           )}
 
-          {kind === "pdf" && (
+          {(kind === "pdf" || kind === "office") && (
             <iframe
-              src={`${url}#view=FitH`}
+              src={`https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(url)}`}
               title={`Preview of ${name}`}
               className="h-[70vh] w-full rounded-md border bg-secondary/40"
             />
