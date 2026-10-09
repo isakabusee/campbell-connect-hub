@@ -62,6 +62,19 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [media, setMedia] = useState<File[]>([]);
+  const onMediaChange = (list: FileList | null) => {
+    const ok: File[] = [];
+    for (const f of Array.from(list ?? [])) {
+      const isImg = f.type.startsWith("image/");
+      const isVid = f.type.startsWith("video/");
+      if (!isImg && !isVid) { toast.error(`${f.name}: only images or videos allowed`); continue; }
+      if (isImg && f.size > 10 * 1024 * 1024) { toast.error(`${f.name}: images must be under 10 MB`); continue; }
+      if (isVid && f.size > 500 * 1024 * 1024) { toast.error(`${f.name}: videos must be under 500 MB`); continue; }
+      ok.push(f);
+    }
+    setMedia(ok);
+  };
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -94,12 +107,26 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
         setUploadProgress(100);
       }
 
-      const { error } = await supabase.from("announcements").insert({ title, content, author_id: userId, file_url });
+      const media_urls = await Promise.all(
+        media.map(async (m) => {
+          const isVideo = m.type.startsWith("video/");
+          const bucket = isVideo ? "sermons" : "gallery";
+          const body = isVideo ? m : await compressIfImage(m);
+          const ext = isVideo ? m.name.split(".").pop() : (body as File).name?.split(".").pop() || m.name.split(".").pop();
+          const path = `announcements/${crypto.randomUUID()}.${ext}`;
+          const { error: upErr } = await supabase.storage.from(bucket).upload(path, body, { contentType: (body as File).type || m.type });
+          if (upErr) throw upErr;
+          return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+        })
+      );
+      setUploadProgress(100);
+
+      const { error } = await supabase.from("announcements").insert({ title, content, author_id: userId, file_url, media_urls });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Announcement created!");
-      setTitle(""); setContent(""); setFile(null);
+      setTitle(""); setContent(""); setFile(null); setMedia([]);
       setUploading(false); setUploadProgress(0);
       qc.invalidateQueries({ queryKey: ["admin-announcements"] });
       qc.invalidateQueries({ queryKey: ["announcements"] });
@@ -131,6 +158,12 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
             <Label className="font-body text-sm text-muted-foreground">Upload a PDF, image, or document</Label>
             <Input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
             {file && <p className="text-xs text-muted-foreground font-body">Selected: {file.name}</p>}
+          </div>
+          <div className="rounded-lg border border-border p-4 space-y-2">
+            <p className="font-body text-sm font-semibold text-foreground">Photos & videos (optional)</p>
+            <Label className="font-body text-sm text-muted-foreground">Images up to 10 MB, videos up to 500 MB</Label>
+            <Input type="file" multiple accept="image/*,video/*" onChange={(e) => onMediaChange(e.target.files)} />
+            {media.length > 0 && <p className="text-xs text-muted-foreground font-body">{media.length} file(s): {media.map((m) => m.name).join(", ")}</p>}
           </div>
           {uploading && (
             <div className="space-y-1">
@@ -164,6 +197,13 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
                   <a href={a.file_url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs text-accent font-body">
                     📎 Attachment
                   </a>
+                )}
+                {a.media_urls?.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {a.media_urls.map((u: string) => /\.(mp4|mov|webm|m4v|ogg)$/i.test(u)
+                      ? <video key={u} src={u} className="h-16 w-24 rounded object-cover" muted />
+                      : <img key={u} src={u} alt="" className="h-16 w-16 rounded object-cover" />)}
+                  </div>
                 )}
               </div>
               <Button variant="ghost" size="icon" onClick={() => del.mutate(a.id)}><Trash2 size={16} className="text-destructive" /></Button>

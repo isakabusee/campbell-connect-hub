@@ -1,0 +1,1 @@
+ALTER TABLE public.announcements ADD COLUMN IF NOT EXISTS media_urls text[] NOT NULL DEFAULT '{}'::text[];
