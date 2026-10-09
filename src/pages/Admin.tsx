@@ -341,7 +341,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
         <CardContent className="space-y-3">
           <div><Label className="font-body">Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
           <div><Label className="font-body">Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-          <div><Label className="font-body">Content</Label><Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} /></div>
+          <div><Label className="font-body">Content (optional)</Label><Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} /></div>
           <div className="rounded-lg border border-border p-4 space-y-2">
             <p className="font-body text-sm font-semibold text-foreground">Attachments (optional)</p>
             <Label className="font-body text-sm text-muted-foreground">Upload PDFs, images, or documents</Label>
