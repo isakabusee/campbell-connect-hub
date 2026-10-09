@@ -423,6 +423,7 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
           </div>
         );
       })}
+      <FilePreviewDialog target={preview} onClose={() => setPreview(null)} />
     </div>
   );
 };
