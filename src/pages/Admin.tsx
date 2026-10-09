@@ -63,6 +63,7 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [media, setMedia] = useState<File[]>([]);
+  const [videoLink, setVideoLink] = useState("");
   const onMediaChange = (list: FileList | null) => {
     const ok: File[] = [];
     for (const f of Array.from(list ?? [])) {
@@ -121,12 +122,12 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
       );
       setUploadProgress(100);
 
-      const { error } = await supabase.from("announcements").insert({ title, content, author_id: userId, file_url, media_urls });
+      const { error } = await supabase.from("announcements").insert({ title, content, author_id: userId, file_url, media_urls, video_link: videoLink.trim() || null });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Announcement created!");
-      setTitle(""); setContent(""); setFile(null); setMedia([]);
+      setTitle(""); setContent(""); setFile(null); setMedia([]); setVideoLink("");
       setUploading(false); setUploadProgress(0);
       qc.invalidateQueries({ queryKey: ["admin-announcements"] });
       qc.invalidateQueries({ queryKey: ["announcements"] });
@@ -164,6 +165,11 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
             <Label className="font-body text-sm text-muted-foreground">Images up to 10 MB, videos up to 500 MB</Label>
             <Input type="file" multiple accept="image/*,video/*" onChange={(e) => onMediaChange(e.target.files)} />
             {media.length > 0 && <p className="text-xs text-muted-foreground font-body">{media.length} file(s): {media.map((m) => m.name).join(", ")}</p>}
+          </div>
+          <div className="rounded-lg border border-border p-4 space-y-2">
+            <p className="font-body text-sm font-semibold text-foreground">Video link (optional)</p>
+            <Label className="font-body text-sm text-muted-foreground">Paste a YouTube, Vimeo, or direct video link — it will play on the announcement</Label>
+            <Input type="url" value={videoLink} onChange={(e) => setVideoLink(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
           </div>
           {uploading && (
             <div className="space-y-1">
