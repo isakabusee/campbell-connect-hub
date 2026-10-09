@@ -95,7 +95,7 @@ const AnnouncementsList = ({ limit }: { limit?: number }) => {
           )}
           <p className="text-xs text-muted-foreground font-body">{format(new Date(a.created_at), "MMM d, yyyy")}</p>
           <h3 className="mt-1 font-display text-lg font-semibold">{a.title}</h3>
-          <p className="mt-2 font-body text-sm text-muted-foreground leading-relaxed line-clamp-3">{a.content}</p>
+          {a.content && <p className="mt-2 font-body text-sm text-muted-foreground leading-relaxed line-clamp-3">{a.content}</p>}
           {a.file_url && (
             <a
               href={a.file_url}
