@@ -15,7 +15,9 @@ import {
   Loader2,
   AlertTriangle,
   ExternalLink,
+  Eye,
 } from "lucide-react";
+import { FilePreviewDialog, previewKindFromName, type PreviewTarget } from "@/components/FilePreview";
 
 const IMAGE_RE = /\.(png|jpe?g|webp|gif|svg|bmp|heic|tiff?)$/i;
 const PDF_RE = /\.pdf$/i;
@@ -95,7 +97,15 @@ async function triggerBlobDownload(url: string, name: string, signal?: AbortSign
  * Guards against repeated clicks while a download is in flight and cancels
  * any previous in-flight request when a new one is started (e.g. on retry).
  */
-function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
+function AttachmentDownload({
+  url,
+  kind,
+  onPreview,
+}: {
+  url: string;
+  kind: DocKind;
+  onPreview: (url: string, name: string) => void;
+}) {
   const [state, setState] = useState<DownloadState>("idle");
   const name = fileNameFromUrl(url);
   const Icon = iconForKind(kind);
@@ -207,7 +217,7 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
   const accessibleLabel = loading
     ? `Downloading ${kindLabel.toLowerCase()} ${name}, please wait`
     : `Download ${kindLabel.toLowerCase()} ${name}`;
-  return (
+  const chip = (
     <button
       type="button"
       onClick={handleDownload}
@@ -239,16 +249,45 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
       </span>
     </button>
   );
+
+  // PDFs can be previewed inline — add a Preview button next to the download chip.
+  if (kind === "pdf" && !loading) {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        {chip}
+        <button
+          type="button"
+          onClick={() => onPreview(url, name)}
+          aria-label={`Preview ${name}`}
+          title="Preview this document"
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-secondary/50 px-2.5 py-1.5 text-xs font-body text-foreground transition hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          <Eye size={14} aria-hidden="true" />
+          Preview
+        </button>
+      </span>
+    );
+  }
+
+  return chip;
 }
 
 /**
  * Image attachment with a lazy-load spinner and an error fallback that still
  * offers a direct link / download retry.
  */
-function ImageAttachment({ url, alt }: { url: string; alt: string }) {
+function ImageAttachment({
+  url,
+  alt,
+  onPreview,
+}: {
+  url: string;
+  alt: string;
+  onPreview: (url: string, name: string) => void;
+}) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
   const name = fileNameFromUrl(url);
-  const downloadLabel = `Download image ${name}`;
+  const downloadLabel = `View image ${name}`;
 
   if (status === "error") {
     return (
@@ -274,14 +313,12 @@ function ImageAttachment({ url, alt }: { url: string; alt: string }) {
   }
 
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      download={name}
+    <button
+      type="button"
+      onClick={() => onPreview(url, name)}
       aria-label={downloadLabel}
-      title="Click to download"
-      className="relative block h-32 w-auto shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
+      title="Click to preview"
+      className="relative block h-32 w-auto shrink-0 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
     >
       {status === "loading" && (
         <div
@@ -301,11 +338,12 @@ function ImageAttachment({ url, alt }: { url: string; alt: string }) {
         }`}
         loading="lazy"
       />
-    </a>
+    </button>
   );
 }
 
 const BulletinsList = ({ limit }: { limit?: number }) => {
+  const [preview, setPreview] = useState<PreviewTarget>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["bulletins"],
     queryFn: async () => {
@@ -354,6 +392,7 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
                             <ImageAttachment
                               url={url}
                               alt={`${b.title} attachment image ${i + 1}`}
+                              onPreview={(u, n) => setPreview({ url: u, name: n, kind: "image" })}
                             />
                           </li>
                         ))}
@@ -365,7 +404,13 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
                           const kind = docKindFromName(fileNameFromUrl(url));
                           return (
                             <li key={`doc-${i}`}>
-                              <AttachmentDownload url={url} kind={kind} />
+                              <AttachmentDownload
+                                url={url}
+                                kind={kind}
+                                onPreview={(u, n) =>
+                                  setPreview({ url: u, name: n, kind: previewKindFromName(n) })
+                                }
+                              />
                             </li>
                           );
                         })}
@@ -378,6 +423,7 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
           </div>
         );
       })}
+      <FilePreviewDialog target={preview} onClose={() => setPreview(null)} />
     </div>
   );
 };
