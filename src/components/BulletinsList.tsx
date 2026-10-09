@@ -97,7 +97,15 @@ async function triggerBlobDownload(url: string, name: string, signal?: AbortSign
  * Guards against repeated clicks while a download is in flight and cancels
  * any previous in-flight request when a new one is started (e.g. on retry).
  */
-function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
+function AttachmentDownload({
+  url,
+  kind,
+  onPreview,
+}: {
+  url: string;
+  kind: DocKind;
+  onPreview: (url: string, name: string) => void;
+}) {
   const [state, setState] = useState<DownloadState>("idle");
   const name = fileNameFromUrl(url);
   const Icon = iconForKind(kind);
