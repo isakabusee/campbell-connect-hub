@@ -388,7 +388,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
               </div>
             </div>
           )}
-          <Button onClick={() => create.mutate()} disabled={!title || !content || uploading || create.isPending} className="font-body">
+          <Button onClick={() => create.mutate()} disabled={!title || uploading || create.isPending} className="font-body">
             <Upload size={16} className="mr-2" />
             {uploading ? "Uploading…" : "Create Bulletin"}
           </Button>
