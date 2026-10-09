@@ -405,18 +405,41 @@ function BulletinsAdmin({ userId }: { userId: string }) {
                 <p className="text-xs text-muted-foreground font-body">{format(new Date(b.date), "MMMM d, yyyy")}</p>
                 <p className="mt-1 text-sm text-muted-foreground font-body whitespace-pre-line">{b.content}</p>
                 {b.file_urls && b.file_urls.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {b.file_urls.map((url: string, i: number) =>
-                      /\.(png|jpe?g|webp|gif|svg|bmp)$/i.test(url) ? (
-                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" aria-label={`View image attachment ${i + 1}`}>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {b.file_urls.map((url: string, i: number) => {
+                      const name = decodeURIComponent(url.split("/").pop() || `attachment-${i + 1}`);
+                      const isImage = /\.(png|jpe?g|webp|gif|svg|bmp)$/i.test(url);
+                      const kind = previewKindFromName(name);
+                      return isImage ? (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setPreview({ url, name, kind: "image" })}
+                          aria-label={`Preview image attachment ${i + 1}`}
+                          title="Click to preview"
+                          className="cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
+                        >
                           <img src={url} alt={`Attachment ${i + 1}`} className="h-16 w-16 rounded object-cover ring-1 ring-border hover:ring-accent" loading="lazy" />
-                        </a>
+                        </button>
                       ) : (
-                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent font-body">
-                          📎 Attachment {b.file_urls!.length > 1 ? i + 1 : ""}
-                        </a>
-                      )
-                    )}
+                        <span key={i} className="inline-flex items-center gap-2">
+                          <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent font-body">
+                            📎 Attachment {b.file_urls!.length > 1 ? i + 1 : ""}
+                          </a>
+                          {kind === "pdf" && (
+                            <button
+                              type="button"
+                              onClick={() => setPreview({ url, name, kind })}
+                              aria-label={`Preview ${name}`}
+                              title="Preview this document"
+                              className="text-xs text-accent font-body hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
+                            >
+                              Preview
+                            </button>
+                          )}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
               </div>
