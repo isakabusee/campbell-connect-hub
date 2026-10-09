@@ -447,6 +447,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
             </CardContent>
           </Card>
         ))}
+        <FilePreviewDialog target={preview} onClose={() => setPreview(null)} />
       </div>
     </div>
   );
