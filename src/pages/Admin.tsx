@@ -229,6 +229,7 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
 
 function BulletinsAdmin({ userId }: { userId: string }) {
   const qc = useQueryClient();
+  const [preview, setPreview] = useState<PreviewTarget>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
