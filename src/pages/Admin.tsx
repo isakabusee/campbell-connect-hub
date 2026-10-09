@@ -247,7 +247,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
   // Allowed attachment types and size limits (images are also compressed before upload)
   const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "jpg", "jpeg", "png", "webp"];
   const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB for images
-  const MAX_DOC_SIZE = 20 * 1024 * 1024; // 20 MB for documents (matches storage bucket limit)
+  const MAX_DOC_SIZE = 50 * 1024 * 1024; // 50 MB for documents (matches storage bucket limit)
   const formatSize = (bytes: number) => (bytes >= 1024 * 1024 ? `${Math.round(bytes / (1024 * 1024))} MB` : `${Math.round(bytes / 1024)} KB`);
 
   const [attachmentErrors, setAttachmentErrors] = useState<string[]>([]);
