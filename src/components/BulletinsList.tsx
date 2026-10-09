@@ -247,10 +247,18 @@ function AttachmentDownload({ url, kind }: { url: string; kind: DocKind }) {
  * Image attachment with a lazy-load spinner and an error fallback that still
  * offers a direct link / download retry.
  */
-function ImageAttachment({ url, alt }: { url: string; alt: string }) {
+function ImageAttachment({
+  url,
+  alt,
+  onPreview,
+}: {
+  url: string;
+  alt: string;
+  onPreview: (url: string, name: string) => void;
+}) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
   const name = fileNameFromUrl(url);
-  const downloadLabel = `Download image ${name}`;
+  const downloadLabel = `View image ${name}`;
 
   if (status === "error") {
     return (
@@ -276,14 +284,12 @@ function ImageAttachment({ url, alt }: { url: string; alt: string }) {
   }
 
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      download={name}
+    <button
+      type="button"
+      onClick={() => onPreview(url, name)}
       aria-label={downloadLabel}
-      title="Click to download"
-      className="relative block h-32 w-auto shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
+      title="Click to preview"
+      className="relative block h-32 w-auto shrink-0 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
     >
       {status === "loading" && (
         <div
@@ -303,7 +309,7 @@ function ImageAttachment({ url, alt }: { url: string; alt: string }) {
         }`}
         loading="lazy"
       />
-    </a>
+    </button>
   );
 }
 
