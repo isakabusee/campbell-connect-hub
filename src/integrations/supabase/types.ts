@@ -61,6 +61,7 @@ export type Database = {
           published: boolean
           title: string
           updated_at: string
+          video_link: string | null
         }
         Insert: {
           author_id?: string | null
@@ -72,6 +73,7 @@ export type Database = {
           published?: boolean
           title: string
           updated_at?: string
+          video_link?: string | null
         }
         Update: {
           author_id?: string | null
@@ -83,6 +85,7 @@ export type Database = {
           published?: boolean
           title?: string
           updated_at?: string
+          video_link?: string | null
         }
         Relationships: []
       }

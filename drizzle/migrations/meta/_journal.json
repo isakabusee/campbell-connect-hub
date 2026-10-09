@@ -8,6 +8,13 @@
       "when": 1791530396131,
       "tag": "0000_announcement_media",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791530819293,
+      "tag": "0001_announcements_video_link",
+      "breakpoints": true
     }
   ]
 }
