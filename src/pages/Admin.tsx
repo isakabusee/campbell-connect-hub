@@ -308,7 +308,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
         })
       );
 
-      const { error } = await supabase.from("bulletins").insert({ title, content, date, author_id: userId, file_urls });
+      const { error } = await supabase.from("bulletins").insert({ title, content: content.trim(), date, author_id: userId, file_urls });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -341,7 +341,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
         <CardContent className="space-y-3">
           <div><Label className="font-body">Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
           <div><Label className="font-body">Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-          <div><Label className="font-body">Content</Label><Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} /></div>
+          <div><Label className="font-body">Content (optional)</Label><Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} /></div>
           <div className="rounded-lg border border-border p-4 space-y-2">
             <p className="font-body text-sm font-semibold text-foreground">Attachments (optional)</p>
             <Label className="font-body text-sm text-muted-foreground">Upload PDFs, images, or documents</Label>
@@ -388,7 +388,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
               </div>
             </div>
           )}
-          <Button onClick={() => create.mutate()} disabled={!title || !content || uploading || create.isPending} className="font-body">
+          <Button onClick={() => create.mutate()} disabled={!title || uploading || create.isPending} className="font-body">
             <Upload size={16} className="mr-2" />
             {uploading ? "Uploading…" : "Create Bulletin"}
           </Button>
