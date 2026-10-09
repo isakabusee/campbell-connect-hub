@@ -426,7 +426,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
                           <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent font-body">
                             📎 Attachment {b.file_urls!.length > 1 ? i + 1 : ""}
                           </a>
-                          {kind === "pdf" && (
+                          {kind !== "other" && (
                             <button
                               type="button"
                               onClick={() => setPreview({ url, name, kind })}
