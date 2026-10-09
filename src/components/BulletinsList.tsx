@@ -15,7 +15,9 @@ import {
   Loader2,
   AlertTriangle,
   ExternalLink,
+  Eye,
 } from "lucide-react";
+import { FilePreviewDialog, previewKindFromName, type PreviewTarget } from "@/components/FilePreview";
 
 const IMAGE_RE = /\.(png|jpe?g|webp|gif|svg|bmp|heic|tiff?)$/i;
 const PDF_RE = /\.pdf$/i;
