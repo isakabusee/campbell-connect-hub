@@ -122,7 +122,7 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
       );
       setUploadProgress(100);
 
-      const { error } = await supabase.from("announcements").insert({ title, content, author_id: userId, file_url, media_urls, video_link: videoLink.trim() || null });
+      const { error } = await supabase.from("announcements").insert({ title, content: content.trim(), author_id: userId, file_url, media_urls, video_link: videoLink.trim() || null });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -153,7 +153,7 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
         <CardHeader><CardTitle className="font-display">New Announcement</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div><Label className="font-body">Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
-          <div><Label className="font-body">Content</Label><Textarea rows={4} value={content} onChange={(e) => setContent(e.target.value)} /></div>
+          <div><Label className="font-body">Content (optional)</Label><Textarea rows={4} value={content} onChange={(e) => setContent(e.target.value)} /></div>
           <div className="rounded-lg border border-border p-4 space-y-2">
             <p className="font-body text-sm font-semibold text-foreground">Attachment (optional)</p>
             <Label className="font-body text-sm text-muted-foreground">Upload a PDF, image, or document</Label>
@@ -185,7 +185,7 @@ function AnnouncementsAdmin({ userId }: { userId: string }) {
               </div>
             </div>
           )}
-          <Button onClick={() => create.mutate()} disabled={!title || !content || uploading || create.isPending} className="font-body">
+          <Button onClick={() => create.mutate()} disabled={!title || uploading || create.isPending} className="font-body">
             <Upload size={16} className="mr-2" />
             {uploading ? "Uploading…" : "Create Announcement"}
           </Button>
