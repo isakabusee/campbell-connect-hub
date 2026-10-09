@@ -247,7 +247,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
   // Allowed attachment types and size limits (images are also compressed before upload)
   const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "jpg", "jpeg", "png", "webp"];
   const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB for images
-  const MAX_DOC_SIZE = 20 * 1024 * 1024; // 20 MB for documents (matches storage bucket limit)
+  const MAX_DOC_SIZE = 50 * 1024 * 1024; // 50 MB for documents (matches storage bucket limit)
   const formatSize = (bytes: number) => (bytes >= 1024 * 1024 ? `${Math.round(bytes / (1024 * 1024))} MB` : `${Math.round(bytes / 1024)} KB`);
 
   const [attachmentErrors, setAttachmentErrors] = useState<string[]>([]);
@@ -346,7 +346,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
             <p className="font-body text-sm font-semibold text-foreground">Attachments (optional)</p>
             <Label className="font-body text-sm text-muted-foreground">Upload PDFs, images, or documents</Label>
             <Input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" multiple onChange={handleFileChange} />
-            <p className="text-xs text-muted-foreground font-body">PDF, DOC, DOCX, JPG, PNG, WEBP — up to 10 MB per image, 20 MB per document.</p>
+            <p className="text-xs text-muted-foreground font-body">PDF, DOC, DOCX, JPG, PNG, WEBP — up to 10 MB per image, 50 MB per document.</p>
             {attachmentErrors.length > 0 && (
               <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive font-body">
                 {attachmentErrors.map((err, i) => (
