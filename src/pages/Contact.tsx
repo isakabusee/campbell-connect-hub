@@ -101,7 +101,7 @@ const ContactPage = () => {
                     <Mail size={18} className="mt-0.5 text-accent" aria-hidden="true" />
                     <div>
                       <p className="font-semibold">Email</p>
-                      <p className="text-muted-foreground">isakabusee@gmail.com</p>
+                      <p className="text-muted-foreground">campbellsdachurch@gmail.com</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
