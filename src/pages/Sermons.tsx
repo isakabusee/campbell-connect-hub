@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Play, Pause, User, Calendar, Search, Video, Music } from "lucide-react";
 import { useState, useRef, useMemo } from "react";
 
@@ -203,7 +203,7 @@ function FeaturedSermonCard({ sermon }: { sermon: any }) {
           </div>
           <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground font-body">
             <Calendar size={16} className="text-accent" />
-            <span>{format(new Date(sermon.date), "MMMM d, yyyy")}</span>
+            <span>{format(parseISO(sermon.date), "MMMM d, yyyy")}</span>
           </div>
           {sermon.description && (
             <p className="mb-6 text-sm text-muted-foreground font-body leading-relaxed">{sermon.description}</p>
@@ -271,7 +271,7 @@ function SermonCard({ sermon }: { sermon: any }) {
         </div>
         <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground font-body">
           <Calendar size={12} />
-          <span>{format(new Date(sermon.date), "MMM d, yyyy")}</span>
+          <span>{format(parseISO(sermon.date), "MMM d, yyyy")}</span>
         </div>
         {sermon.description && (
           <p className="mb-4 text-xs text-muted-foreground font-body line-clamp-2">{sermon.description}</p>

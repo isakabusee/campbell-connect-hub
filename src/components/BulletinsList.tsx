@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type MouseEvent, type KeyboardEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -379,7 +379,7 @@ const BulletinsList = ({ limit }: { limit?: number }) => {
               <FileText size={20} className="mt-0.5 shrink-0 text-accent" />
               <div className="min-w-0 flex-1">
                 <h3 className="font-display text-lg font-semibold">{b.title}</h3>
-                <p className="text-xs text-muted-foreground font-body">{format(new Date(b.date), "MMM d, yyyy")}</p>
+                <p className="text-xs text-muted-foreground font-body">{format(parseISO(b.date), "MMM d, yyyy")}</p>
                 {b.content && (
                   <p className="mt-2 font-body text-sm text-muted-foreground leading-relaxed line-clamp-3">{b.content}</p>
                 )}
