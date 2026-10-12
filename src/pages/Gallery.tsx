@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Camera, X, ChevronLeft, ChevronRight, Link2, Check } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -191,7 +191,7 @@ const GalleryPage = () => {
               <h2 className="mb-1 font-display text-3xl font-bold">{activeAlbum.title}</h2>
               {activeAlbum.event_date && (
                 <p className="mb-2 font-body text-sm text-muted-foreground">
-                  {format(new Date(activeAlbum.event_date), "MMMM d, yyyy")}
+                  {format(parseISO(activeAlbum.event_date), "MMMM d, yyyy")}
                 </p>
               )}
               {activeAlbum.description && (
@@ -263,7 +263,7 @@ const GalleryPage = () => {
                         <div className="absolute bottom-0 left-0 right-0 p-5">
                           <h3 className="font-display text-lg font-bold text-white">{album.title}</h3>
                           <div className="flex items-center gap-3 text-xs text-white/80 font-body">
-                            {album.event_date && <span>{format(new Date(album.event_date), "MMM d, yyyy")}</span>}
+                            {album.event_date && <span>{format(parseISO(album.event_date), "MMM d, yyyy")}</span>}
                             <span>{photoCount} photo{photoCount !== 1 ? "s" : ""}</span>
                           </div>
                         </div>

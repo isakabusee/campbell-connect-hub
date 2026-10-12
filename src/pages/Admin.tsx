@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Trash2, Upload, CalendarDays, ImagePlus, Plus, Users, ArrowLeft, ArrowRight, Star } from "lucide-react";
 import { FilePreviewDialog, previewKindFromName, type PreviewTarget } from "@/components/FilePreview";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { supabase as sb } from "@/integrations/supabase/client";
 import SignOutTroubleshooter from "@/components/admin/SignOutTroubleshooter";
 
@@ -232,7 +232,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
   const [preview, setPreview] = useState<PreviewTarget>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -402,7 +402,7 @@ function BulletinsAdmin({ userId }: { userId: string }) {
             <CardContent className="flex items-start justify-between pt-4">
               <div>
                 <p className="font-display font-semibold">{b.title}</p>
-                <p className="text-xs text-muted-foreground font-body">{format(new Date(b.date), "MMMM d, yyyy")}</p>
+                <p className="text-xs text-muted-foreground font-body">{format(parseISO(b.date), "MMMM d, yyyy")}</p>
                 <p className="mt-1 text-sm text-muted-foreground font-body whitespace-pre-line">{b.content}</p>
                 {b.file_urls && b.file_urls.length > 0 && (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -486,7 +486,7 @@ function SermonsAdmin({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const [title, setTitle] = useState("");
   const [speaker, setSpeaker] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [description, setDescription] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -595,7 +595,7 @@ function SermonsAdmin({ userId }: { userId: string }) {
             <CardContent className="flex items-start justify-between pt-4">
               <div>
                 <p className="font-display font-semibold">{s.title}</p>
-                <p className="text-xs text-muted-foreground font-body">{s.speaker} — {format(new Date(s.date), "MMMM d, yyyy")}</p>
+                <p className="text-xs text-muted-foreground font-body">{s.speaker} — {format(parseISO(s.date), "MMMM d, yyyy")}</p>
                 {s.description && <p className="mt-1 text-sm text-muted-foreground font-body">{s.description}</p>}
                 <div className="mt-1 flex gap-3">
                   {s.audio_url && <span className="text-xs text-accent font-body">🎵 Audio</span>}
@@ -945,7 +945,7 @@ function GalleryAdmin({ userId }: { userId: string }) {
               <div>
                 <p className="font-display font-semibold">{album.title}</p>
                 <p className="text-xs text-muted-foreground font-body">
-                  {album.event_date && format(new Date(album.event_date), "MMM d, yyyy") + " · "}
+                  {album.event_date && format(parseISO(album.event_date), "MMM d, yyyy") + " · "}
                   {(album.photos as any[])?.length ?? 0} photos
                 </p>
                 {album.description && <p className="mt-1 text-sm text-muted-foreground font-body">{album.description}</p>}
